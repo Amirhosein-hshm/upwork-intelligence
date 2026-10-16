@@ -1,0 +1,17 @@
+{
+  "name": "upwork-proposal-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Telegram Serverless bot: reads Upwork alert emails from Gmail, drafts proposals with free-tier LLMs, sends to Telegram. Never submits proposals.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "token": "node scripts/get-refresh-token.mjs",
+    "push": "tgcloud push",
+    "check": "tgcloud status"
+  },
+  "devDependencies": {
+    "@tgcloud/cli": "^0.2.0"
+  },
+  "license": "UNLICENSED"
+}

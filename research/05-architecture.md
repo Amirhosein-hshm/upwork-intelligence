@@ -1,376 +1,178 @@
-# ۰۵ — معماری نهایی پیشنهادی
+# ۰۵ — معماری سیستم (نسخه‌ی Telegram Serverless)
 
-> **پیش‌فرض‌ها (فرض صریح):** صاحب حساب Upwork و سرویس‌های LLM **واجد شرایط قانونی** استفاده از آن‌هاست (محل اقامت او، نه محل سرور، ملاک است). سرور اجرایی: **VPS شخصی شما** (خارج از ایران). حجم ۲۰–۲۰۰ ایمیل در روز. ایجنت **فقط پیش‌نویس** می‌سازد و **هیچ‌وقت** وارد Upwork نمی‌شود، صفحه‌ی جاب را اسکرپ نمی‌کند و پروپوزال را ثبت نمی‌کند.
+> **پیش‌فرض‌ها (اعلام کاربر، ۲۰۲۶-۱۰-۱۶):** کاربر خارج از ایران است و محدودیت منطقه‌ای ندارد. حساب Upwork، Gmail، Telegram و سرویس‌های LLM باید به نام واقعی کاربر باشند و شرایط منطقه‌ای هر سرویس را خود کاربر تأیید کند (فایل `06`). حجم: ۲۰ تا ۲۰۰ ایمیل در روز. **ارسال پروپوزال همیشه دستی و توسط کاربر است.** ایجنت هیچ‌وقت به Upwork چیزی ارسال نمی‌کند.
+>
+> **پیش‌فرض دیگر:** بدون دیتابیس و بدون ذخیره‌ی محتوای ایمیل. وضعیت «خوانده‌شده» در خود Gmail نگه‌داری می‌شود.
 
 ---
 
-## ۱. نمودار معماری (Mermaid)
+## ۰. خلاصه
 
-```mermaid
-flowchart LR
-    subgraph Source["منبع داده (فقط ایمیل شما)"]
-        UA[Upwork Job Alert / Message email]
-        GF[Gmail filter<br/>from:upwork.com → Label: Upwork]
-        UA --> GF
-    end
+کل برنامه روی **Telegram Serverless** اجرا می‌شود: یک ربات تلگرام که کدش در زیرساخت تلگرام اجرا می‌شود و با دستور `npx tgcloud push` deploy می‌شود. هیچ سرور، Lambda، n8n یا VPS لازم نیست.
 
-    subgraph Worker["Worker (Python، یک فرایند، زمان‌بند هر ۵ دقیقه)"]
-        ING[1. Ingest<br/>IMAP poll (label Upwork)]
-        PRS[2. Parse<br/>HTML → text، حذف footer/tracking]
-        DED[3. Dedupe<br/>upwork_job_id + hash]
-        EXT[4. Extract<br/>LLM → JSON Schema]
-        VAL[5. Validate<br/>Pydantic]
-        GATE[6. Gates + Score<br/>کد: rubric.v1]
-        PRO[7. Propose<br/>LLM فقط برای APPLY/MAYBE]
-        NOT[8. Notify<br/>Telegram HTML]
-        Q[(SQLite<br/>jobs / evaluations / proposals / feedback / llm_calls)]
-    end
+**محدودیت اصلی این سرویس:** Telegram Serverless فقط وقتی کد را اجرا می‌کند که **یک update از تلگرام** برسد. زمان‌بند (هر ۵ دقیقه) و تایمر مستقل ندارد، و درگاه HTTP ورودی هم ندارد (منبع: پروژه‌ی متن‌باز Postdesk که این محدودیت را پیاده‌سازی و گزارش کرده، سطح اطمینان متوسط؛ صفحه‌ی رسمی برای این جلسه باز نشد). بنابراین **پردازش خودکار هر ۵ دقیقه روی این سرویس به‌تنهایی ممکن نیست.**
 
-    subgraph LLM["LLM Provider chain (Free tiers + fallback)"]
-        P1[Gemini Flash]
-        P2[Groq gpt-oss]
-        P3[OpenRouter :free]
-        P4[Ollama local]
-    end
+**راه‌حل ساده در این سرویس:** کاربر در تلگرام دستور `/check` را می‌زند؛ ربات ایمیل‌های جدید را می‌خواند، پردازش می‌کند و نتیجه را می‌فرستد. این یک «دکمه‌ی بررسی دستی» است، نه اتوماسیون کامل.
 
-    GF -->|IMAP| ING --> PRS --> DED --> EXT --> VAL --> GATE --> PRO --> NOT
-    DED <--> Q
-    EXT --> LLM
-    PRO --> LLM
-    GATE <--> Q
-    NOT -->|Bot API sendMessage| TG[[Telegram group]]
-    TG -->|/applied /skip /won| CMD[Command handler<br/>long polling]
-    CMD --> Q
-    NOT --> Q
+---
 
-    YOU((شما)) -. بازبینی و ثبت دستی .-> UP[[Upwork UI]]
-    TG -. خواندن پیام .-> YOU
+## ۱. آنچه Telegram Serverless به ما می‌دهد و آنچه نمی‌دهد
+
+| قابلیت | وضعیت | منبع و سطح |
+|---|---|---|
+| اجرای JavaScript روی زیرساخت تلگرام، با `npx tgcloud push` | دارد | CLI در npm (v0.2.0، MIT)؛ گزارش‌های جولای ۲۰۲۶ (متوسط) |
+| پاسخ به update های ربات (پیام، دکمه، فرمان) | دارد | مستندات و نمونه‌ها (بالا) |
+| `api.<method>()` برای همه‌ی متدهای Bot API | دارد | خبر Radio-T با نقل از مستندات (متوسط) |
+| `fetch` برای HTTP خروجی به سرویس‌های بیرونی (Gmail API، LLM) | دارد؛ **پاسخ فقط متنی و حداکثر ۳۰ مگابایت** | مستندات (نقل‌شده)؛ بعضی منابع ۳۲ مگابایت گفته‌اند — **تعارض، از ۳۰ مگابایت احتیاط کنید** |
+| بدون npm، بدون دسترسی فایل، فقط JavaScript | ندارد | چند منبع مستقل (متوسط تا بالا) |
+| **IMAP / اتصال TCP خام** | **تأیید نشد؛ احتمالاً ندارد** (فقط HTTP) | استنتاج از محدودیت‌های fetch |
+| **زمان‌بند، cron، اجرای دوره‌ای** | **ندارد (گزارش متوسط)؛ CLI هم دستور زمان‌بندی ندارد** | Postdesk (متوسط)؛ بررسی npm (بالا) |
+| **درگاه HTTP ورودی برای trigger خارجی** | **ندارد**؛ فقط update تلگرام | Postdesk (متوسط) |
+| دیتابیس SQLite داخلی | دارد؛ **ما لازم نداریم** | مستندات |
+| فرمان‌های تلگرام (`/check`، `/applied`) | دارد | مستندات |
+| قیمت، SLA، سقف زمان اجرا و حافظه | **منتشر نشده** | گزارش‌های جولای ۲۰۲۶ |
+| مدیریت امن کلیدهای API خارجی (مثل توکن Gmail) | **منتشر نشده**؛ `.tgcloud/` فقط محلی و در Git نباشد | cysecurity (متوسط) |
+| خروجی گرفتن از داده‌ها | **مکانیزم مستند نشده** | چند منبع (متوسط) |
+
+---
+
+## ۲. دو معماری ممکن
+
+### الف) پیشنهاد اصلی: Telegram Serverless با دستور `/check` (ساده‌ترین روی این سرویس)
+
+```
+کاربر → تلگرام: /check
+  → Telegram Serverless (handlers/message.js)
+     1. fetch → Gmail API: ایمیل‌های label:Upwork-Alerts و is:unread (حداکثر ۵ تا در هر بار)
+     2. برای هر ایمیل:
+        - پاک‌سازی متن (lib/clean.js)
+        - fetch → LLM: استخراج فیلدها (extract.v1)
+        - امتیاز با قواعد کد (lib/score.js، از فایل 03)
+        - اگر APPLY یا MAYBE: fetch → LLM: پیش‌نویس پروپوزال (proposal_writer.v1)
+        - api.sendMessage → تلگرام (HTML، تقسیم در ۴۰۹۶ کاراکتر)
+        - فقط بعد از ارسال موفق: fetch → Gmail API: حذف برچسب UNREAD
+     3. اگر ایمیل بیشتری مانده: پیام «برای ادامه دوباره /check بزنید»
 ```
 
----
+**چرا این ساده است:**
+- بدون دیتابیس: وضعیت «پردازش‌شده» در Gmail است (ایمیل خوانده‌شده = پردازش‌شده).
+- بدون سرور، بدون زمان‌بند، بدون Lambda.
+- یک فایل اصلی و چند ماژول کوچک.
 
-## ۲. Data flow (از ایمیل تا تلگرام)
+**محدودیت‌ها:**
+- **دستی است:** اگر کاربر `/check` نزند، هیچ پردازشی انجام نمی‌شود. این با خواسته‌ی «خودکار» فرق دارد.
+- **سقف زمان اجرا منتشر نشده:** پس هر بار فقط تعداد کمی ایمیل را پردازش می‌کنیم و در صورت نیاز دوباره `/check` می‌زنیم.
+- **Gmail API به‌جای IMAP:** App Password کار نمی‌کند؛ باید پروژه‌ی Google Cloud، OAuth و Refresh Token داشته باشیم. **تأیید نشد:** اینکه برای حساب‌های شخصی در حالت «Testing» توکن بعد از مدت کوتاهی منقضی می‌شود؛ باید قبل از استفاده بررسی شود.
+- **محل ذخیره‌ی توکن Gmail:** در Telegram Serverless مدیریت امن کلید مستند نشده؛ **این مهم‌ترین ریسک امنیتی است.**
 
-1. **Gmail** ایمیل Upwork را با فیلتر به برچسب `Upwork` منتقل می‌کند.
-2. **Ingest** هر ۵ دقیقه با IMAP در آن برچسب، پیام‌های جدید (`UID > last_uid`) را می‌خواند. (Gmail API + Pub/Sub در فاز ۲.)
-3. **Parse**: HTML → متن؛ لینک‌های `upwork.com/jobs/~...` استخراج؛ footer و لینک‌های tracking حذف.
-4. **Dedupe**: اگر `upwork_job_id` در جدول `jobs` است، فقط به‌روزرسانی (مثلاً تغییر بودجه) ثبت و پیام تکراری ارسال نمی‌شود.
-5. **Extract** (LLM + JSON Schema از `03`) → **Validate** (Pydantic). اگر `email_type != job_alert` → ذخیره و بدون امتیازدهی.
-6. **Gates + Score** (کد) → `verdict`.
-7. **Propose** (LLM، فقط APPLY/MAYBE) → پیش‌نویس + placeholder/claim-check.
-8. **Notify** → یک پیام تلگرام در قالب زیر. حداکثر ۴۰۹۶ کاراکتر؛ اگر بیشتر شد، پیام دوم با ادامه‌ی متن.
-9. **Feedback**: شما با دستورات (`/applied`، `/skip`، `/won`) وضعیت را ثبت می‌کنید.
+### ب) گزینه‌ی خودکار: Lambda برای زمان‌بند، و Telegram فقط برای پیام
 
----
+اگر «خودکار هر ۵ دقیقه» الزامی است، Telegram Serverless به‌تنهایی کافی نیست. در این حالت:
+- یک تابع Lambda با EventBridge هر ۵ دقیقه Gmail را می‌خواند، پردازش می‌کند و مستقیم با Bot API پیام می‌فرستد.
+- Telegram Serverless در این حالت تقریباً بی‌فایده است، چون Lambda خودش می‌تواند پیام بفرستد.
+- هزینه‌ی Lambda در سطح رایگان است (منبع: AWS always-free، ۲۰۲۶، ۱ میلیون درخواست و ۴۰۰ هزار GB-second در ماه).
 
-## ۳. شرح مؤلفه‌ها و دلیل انتخاب
-
-| مؤلفه | مسئولیت | انتخاب | دلیل |
-|---|---|---|---|
-| **Gmail + فیلتر** | جمع‌آوری ایمیل‌های Upwork | Gmail filter → label | ساده، بدون کد، بدون دسترسی به کل صندوق |
-| **Ingest** | خواندن ایمیل‌های جدید | IMAP (imaplib / imapclient) با App Password یا OAuth | کم‌پیچیده‌تر از Pub/Sub. Gmail watch هر ۷ روز باید تمدید شود و Pub/Sub نیاز به پروژه‌ی GCP دارد (تأیید شده). تأخیر ۵ دقیقه‌ای برای Alertهای Upwork قابل‌قبول است. |
-| **Parse** | HTML → متن | `selectolax` یا BeautifulSoup + قوانین ساده | پایدار و سریع |
-| **Store** | همه‌ی داده‌ها | **SQLite** (فایل محلی) | صفر هزینه، کافی برای ۲۰۰ جاب/روز؛ بک‌آپ = کپی فایل. Postgres/Supabase در فاز بعد اگر لازم شد |
-| **LLM chain** | Extract/Score/Propose | Gemini → Groq → OpenRouter → Ollama | تنوع و حفظ پایداری در برابر Rate limit (فایل ۰۴) |
-| **Gates/Score** | تصمیم قطعی | کد Python | تست‌پذیر، پایدار، ارزان |
-| **Notify** | ارسال تلگرام | Bot API با `sendMessage` (HTML) | رایگان، ساده، پشتیبانی از inline buttons (فاز ۲) |
-| **Command handler** | ثبت بازخورد | `getUpdates` (long polling) | بدون نیاز به وب‌هوک و دامنه |
-| **Scheduler** | اجرای هر ۵ دقیقه | `systemd timer` روی VPS شخصی | ساده‌تر از n8n/Celery؛ لاگ با `journalctl` |
-| **Hosting** | اجرای Worker، SQLite و Ollama (اختیاری) | VPS شخصی (Ubuntu LTS) | کنترل کامل، IP ثابت، دسترسی مستقیم به Telegram و IMAP؛ هزینه‌ی اضافی ندارد چون سرور موجود است |
-| **Logging/Alert** | خطاها | فایل لاگ + پیام تلگرام مدیریتی در صورت شکست | بدون ابزار اضافه |
-
-### ارکستریشن: مقایسه و توصیه صریح
-| گزینه | مزایا | معایب | نتیجه |
-|---|---|---|---|
-| **کد ساده Python** | کنترل کامل، تست‌پذیر، بدون وابستگی به سرویس | باید خودتان لاگ/ری‌تری بنویسید | ✅ **توصیه** |
-| n8n (self-host) | UI بصری، اتصال آماده به Gmail/Telegram | نگهداری یک سرویس دیگر، منطق پیچیده در JSON/JS سخت است، رفتار retry ناپایدارتر | ❌ برای این پروژه اضافه است |
-| LangGraph / framework ایجنت | گراف حالت، ابزارها | پیچیدگی زیاد برای یک pipeline خطی | ❌ زودهنگام |
-
-**توصیه:** یک پروژه‌ی Python با چند ماژول خطی. اگر بعداً شرط‌ها و شاخه‌ها زیاد شد، LangGraph را در نظر بگیرید.
+**نتیجه:** اگر کاربر دستی بودن را بپذیرد، الف ساده‌تر است. اگر خودکار بودن الزامی است، ب تنها گزینه‌ی قابل اجرا از این میان است.
 
 ---
 
-## ۴. ساختار پوشه‌ها و Stack
+## ۳. ساختار پروژه (الف)
 
-```text
-upwork-intelligence/
-├── research/                  # همین تحقیق (Markdown)
-├── prompts/
-│   ├── extract.v1.md
-│   ├── score.v1.md
-│   └── proposal_writer.v1.md
-├── rubric/
-│   └── rubric.v1.yaml         # وزن‌ها، آستانه‌ها، red flags
-├── profile/
-│   ├── profile.yaml           # ⚠️ خصوصی؛ در .gitignore
-│   └── examples/              # ⚠️ خصوصی؛ در .gitignore
-├── src/
-│   ├── config.py              # env + validation
-│   ├── ingest/imap_client.py
-│   ├── parse/email_to_text.py
-│   ├── store/db.py            # sqlite + migrations
-│   ├── llm/
-│   │   ├── base.py            # interface + retry
-│   │   ├── providers.py       # gemini, groq, openrouter, ollama (OpenAI-compatible)
-│   │   └── chain.py           # fallback + circuit breaker
-│   ├── pipeline/
-│   │   ├── extract.py
-│   │   ├── gates.py           # hard gates
-│   │   ├── score.py           # weighted score
-│   │   └── propose.py
-│   ├── notify/telegram.py     # send, split, format
-│   ├── commands/telegram_poll.py   # /applied /skip /won
-│   └── main.py                # run_once() + scheduler entry
-├── tests/
-│   ├── fixtures/              # ⚠️ ایمیل‌های sanitized فقط؛ بدون اطلاعات شخصی
-│   ├── test_parse.py
-│   ├── test_gates.py
-│   ├── test_score.py
-│   └── test_schema.py
-├── data/                      # ⚠️ SQLite و لاگ؛ در .gitignore
-├── .env.example               # بدون کلید واقعی
-├── pyproject.toml
-└── README.md
+```
+upwork-agent/
+├─ handlers/
+│  └─ message.js        ← فرمان /check و پیام‌های ساده
+├─ lib/
+│  ├─ gmail.js          ← خواندن ایمیل‌ها و حذف UNREAD (fetch)
+│  ├─ llm.js            ← Gemini → Groq → OpenRouter (fetch، با fallback)
+│  ├─ clean.js          ← پاک‌سازی HTML ایمیل
+│  ├─ score.js          ← قواعد سخت و امتیاز (بدون LLM)
+│  ├─ prompts.js        ← extract.v1، score.v1، proposal_writer.v1 (از فایل 02 و 03)
+│  └─ format.js         ← قالب پیام تلگرام و تقسیم متن
+├─ .tgcloud/            ← محلی؛ در Git نباشد
+├─ docs/                ← محلی؛ در deploy نمی‌شود
+└─ package.json
 ```
 
-**Stack:** Python 3.12 · `uv` (مدیریت پکیج) · `httpx` · `pydantic v2` · `sqlite3` (stdlib) · `imapclient` · `selectolax` · `pytest` · `systemd timer`.
-
-**چرا Python؟** اکوسیستم مناسب برای IMAP، HTML parsing و Pydantic؛ کدِ کم برای تنها یک pipeline.
+**schema.js فقط در صورت نیاز به دیتابیس** (مثلاً برای `/applied`). در نسخه‌ی اول لازم نیست. **تأیید نشد:** اینکه بدون schema.js `push` بی‌مشکل انجام شود؛ با `tgcloud init` بررسی شود.
 
 ---
 
-## ۵. Schema دیتابیس (SQLite)
+## ۴. قالب پیام تلگرام
 
-```sql
-CREATE TABLE IF NOT EXISTS emails (
-  id              INTEGER PRIMARY KEY,
-  gmail_uid       INTEGER NOT NULL UNIQUE,          -- IMAP UID
-  message_id      TEXT,                              -- Message-ID header
-  received_at     TEXT NOT NULL,                     -- ISO-8601 UTC
-  subject         TEXT,
-  from_addr       TEXT,
-  email_type      TEXT,                              -- job_alert | invitation | message | ...
-  body_text       TEXT,                              -- پاک‌سازی‌شده؛ می‌توان حذف/هش کرد
-  processed_at    TEXT,
-  status          TEXT NOT NULL DEFAULT 'new'        -- new | extracted | skipped | error
-);
+```
+🟢 APPLY · امتیاز 82/100
+📌 {{title}}
+💰 {{budget_text}} · 🌍 {{client_country}}
+⚠️ ریسک‌ها: {{red_flags}}
+🔗 {{job_url}}
 
-CREATE TABLE IF NOT EXISTS jobs (
-  id                  INTEGER PRIMARY KEY,
-  upwork_job_id       TEXT UNIQUE,                   -- از URL (~...)؛ اگر نبود، hash(url)
-  url                 TEXT NOT NULL,
-  title               TEXT NOT NULL,
-  description_summary TEXT,
-  job_type            TEXT,                          -- hourly | fixed | unknown
-  budget_currency    TEXT,
-  budget_min          REAL,
-  budget_max          REAL,
-  budget_unit         TEXT,                          -- hour | project
-  experience_level    TEXT,
-  duration            TEXT,
-  client_country      TEXT,
-  client_payment_verified INTEGER,                   -- 0 | 1 | NULL
-  client_rating       REAL,
-  client_total_spent  REAL,
-  client_hires        INTEGER,
-  proposals_count     INTEGER,
-  connects_required   INTEGER,
-  skills_json         TEXT,
-  screening_json      TEXT,
-  extracted_json      TEXT NOT NULL,                 -- خروجی کامل Extract
-  first_seen_at       TEXT NOT NULL,
-  last_seen_at        TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_jobs_seen ON jobs(first_seen_at);
-
-CREATE TABLE IF NOT EXISTS evaluations (
-  id              INTEGER PRIMARY KEY,
-  job_id          INTEGER NOT NULL REFERENCES jobs(id),
-  rubric_version  TEXT NOT NULL,
-  score           REAL NOT NULL,
-  verdict         TEXT NOT NULL,                     -- APPLY | MAYBE | SKIP
-  gates_failed    TEXT,                              -- JSON array
-  subscores_json  TEXT NOT NULL,
-  red_flags_json  TEXT,
-  summary_fa      TEXT,
-  model           TEXT,
-  created_at      TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS proposals (
-  id              INTEGER PRIMARY KEY,
-  job_id          INTEGER NOT NULL REFERENCES jobs(id),
-  version         INTEGER NOT NULL DEFAULT 1,
-  prompt_version  TEXT NOT NULL,
-  model           TEXT NOT NULL,
-  draft_text      TEXT NOT NULL,
-  final_text      TEXT,                              -- نسخه‌ی ویرایش‌شده‌ی شما
-  placeholders    TEXT,                              -- JSON
-  claims_used     TEXT,                              -- JSON
-  status          TEXT NOT NULL DEFAULT 'draft',     -- draft | sent | edited | submitted_by_user | rejected
-  created_at      TEXT NOT NULL,
-  updated_at      TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS feedback (
-  id              INTEGER PRIMARY KEY,
-  job_id          INTEGER REFERENCES jobs(id),
-  proposal_id     INTEGER REFERENCES proposals(id),
-  action          TEXT NOT NULL,                     -- applied | skip | won | replied | interview | hired | not_interested
-  reason          TEXT,
-  created_at      TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS telegram_messages (
-  id              INTEGER PRIMARY KEY,
-  job_id          INTEGER REFERENCES jobs(id),
-  chat_id         TEXT NOT NULL,
-  message_id      INTEGER NOT NULL,
-  sent_at         TEXT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS llm_calls (
-  id              INTEGER PRIMARY KEY,
-  purpose         TEXT NOT NULL,                     -- extract | score | propose
-  provider        TEXT NOT NULL,
-  model           TEXT NOT NULL,
-  input_tokens    INTEGER,
-  output_tokens   INTEGER,
-  latency_ms      INTEGER,
-  status          TEXT NOT NULL,                     -- ok | rate_limited | error | schema_invalid
-  error           TEXT,
-  created_at      TEXT NOT NULL
-);
+📝 پیش‌نویس (کپی کنید):
+<pre>{{proposal_text}}</pre>
 ```
 
-**Deduplication:** کلید اصلی جاب `upwork_job_id` است. اگر نبود، `sha256(normalized_title + client_country + budget)`. پیام تلگرام فقط یک بار برای هر جاب (با `telegram_messages`) ارسال شود؛ به‌روزرسانی‌ها به‌صورت reply.
+- `parse_mode = HTML`؛ متن ایمیل و کاربر باید escape شود (`<`، `>`، `&`).
+- هر پیام زیر ۴۰۹۶ کاراکتر؛ بیشتر از آن، تقسیم در مرز خط با حفظ تگ‌ها.
+- **محدودیت ارسال:** حدود یک پیام در ثانیه به یک چت، ۲۰ پیام در دقیقه به گروه (منبع: FAQ رسمی Bot، ۲۰۲۲–۲۰۲۶). اگر 429 آمد، `retry_after` رعایت شود.
 
 ---
 
-## ۶. قالب پیام نهایی تلگرام (دقیق)
+## ۵. مدیریت خطا
 
-> **parse_mode = HTML** (توصیه: ساده‌تر از MarkdownV2 که نیاز به escape زیاد دارد). کاراکترهای `<`, `>`, `&` در متن جاب باید escape شوند.
-> `<pre>` در تلگرام قابل کپی با یک‌ضرب است؛ پروپوزال را داخل `<pre>` بگذارید.
-
-```html
-🟢 <b>APPLY · 82/100</b> · #job_7f3a
-<b>Title:</b> Senior React/Next.js engineer for B2B dashboard
-💰 <b>Budget:</b> $35–$50/hr · ⏱ 3–6 months · 🎯 Expert
-🌍 <b>Client:</b> United States · ⭐ 4.9 · $48K spent · 23 hires · ✅ payment verified
-👥 <b>Proposals so far:</b> 8 · 🔌 <b>Connects:</b> 16 (اعلام‌شده در آگهی)
-
-🔗 https://www.upwork.com/jobs/~xxxxxxxxxxxxxxxx
-
-🧠 <b>خلاصه:</b> پروژه‌ی داشبورد B2B با React و Next.js و نیاز به بهینه‌سازی لیست‌های بزرگ. تطابق مهارتی بالا. ریسک: scope مربوط به Auth هنوز مشخص نیست.
-
-✅ <b>تطابق:</b> React, Next.js, TypeScript, Postgres
-⚠️ <b>Red flags:</b> —
-❓ <b>سوال قبل از اپلای:</b> SSO مورد نیاز است؟
-
-📝 <b>پیش‌نویس پروپوزال (v1، ۱۴۷ کلمه)</b>
-<pre>Your tenant lists slowing down on large accounts usually points to the query plan before the UI...
-
-[PLACEHOLDER: confirm metric from profile before sending]
-
-My first step would be to capture slow traces for two real tenants...
-
-Are the tenant lists server-paginated today?</pre>
-
-<i>دستورات: /applied 7f3a · /skip 7f3a · /won 7f3a · /note 7f3a متن</i>
-```
-
-**نکات قالب:**
-- اگر `placeholders` خالی نیست → خط ⚠️ «پیش‌نویس placeholder دارد؛ قبل از ارسال پر کنید».
-- اگر verdict = MAYBE → آیکن 🟡 و بدون پروپوزال یا با پروپوزال کوتاه.
-- اگر verdict = SKIP → پیام ارسال نمی‌شود (پیش‌فرض)؛ فقط در لاگ.
-- اگر پیام بیش از ۴۰۹۶ کاراکتر → بخش پروپوزال در پیام دوم (با `reply_to`).
-- **پیام نمونه با داده‌های فرضی است.**
-
----
-
-## ۷. مدیریت خطا، Rate limit، Deduplication، Retry
-
-| سناریو | رفتار |
+| خطا | رفتار |
 |---|---|
-| 429 از LLM | `Retry-After` را احترام بگذارید؛ provider را cooldown کنید؛ به provider بعدی بروید |
-| 5xx/Timeout | retry با exponential backoff + jitter (حداکثر ۲ بار) |
-| JSON نامعتبر | یک بار پرامپت اصلاح؛ اگر باز خطا → job در حالت `needs_review` |
-| همه providerها شکست | job در صف؛ پیام مدیریتی به تلگرام؛ دوباره در سهمیه‌ی بعدی |
-| IMAP قطع | retry؛ اگر ۳ بار شکست، پیام مدیریتی؛ UID جلو نرود |
-| Telegram 429 | `retry_after` را دقیقاً رعایت کنید؛ پیام‌ها را صف کنید |
-| Telegram 400 (message too long) | تقسیم در مرز خط؛ HTML tag باز نماند |
-| تکراری | `upwork_job_id` یکتا؛ `telegram_messages` جلوی ارسال دوباره |
-| ایمیل غیرجاب | `email_type != job_alert` → ذخیره، بدون امتیاز، بدون پیام |
-| خطای داخلی | لاگ با traceback، `status=error`، پیام مدیریتی اگر تکرار شد |
-
-### عملیات روی VPS شخصی (Ops)
-- **OS و کاربر:** Ubuntu LTS، کاربر `agent` بدون sudo، ورود فقط با SSH key، غیرفعال‌سازی ورود با رمز.
-- **فایروال:** UFW با فقط پورت SSH باز؛ هیچ سرویس وب عمومی لازم نیست (Worker فقط outbound دارد: IMAP، Telegram API، LLM API).
-- **به‌روزرسانی امنیتی:** `unattended-upgrades` فعال.
-- **زمان‌بند:** `systemd timer` (بخش ۰۶) به‌جای cron، چون لاگ و وضعیت شکست واضح است.
-- **بک‌آپ:** SQLite با `sqlite3 data/app.db ".backup ..."` روزانه و کپی در فضای دیگر (مثلاً یک bucket رمزگذاری‌شده)؛ `profile/` و `.env` جدا بک‌آپ شوند.
-- **مانیتورینگ:** اگر ۳۰ دقیقه اجرای موفق نبود یا disk بیش از ۸۰٪ بود، پیام به Telegram مدیریتی (health check ساده).
-- **منابع:** پروسه‌ی Worker حدود ۱۵۰–۳۰۰ MB RAM؛ اگر Ollama اضافه شود، به ~۸–۱۶ GB RAM نیاز دارد.
-- **Secrets:** `.env` با `chmod 600`، مالک `agent`؛ بدون لاگ‌گیری از مقادیر.
-
-**Telegram limits (منابع ثالث با اشاره به FAQ رسمی؛ صفحه‌ی رسمی `core.telegram.org` در این جلسه ۴۰۳ داد):** حداکثر ۴۰۹۶ کاراکتر متن؛ حدود ۱ پیام در ثانیه به یک چت؛ ۲۰ پیام در دقیقه به یک گروه؛ حدود ۳۰ پیام در ثانیه برای کل. (تقریباً مطمئن، اما قبل از production تأیید کنید.)
+| Gmail API خطا می‌دهد | پیام خطا به تلگرام؛ هیچ ایمیلی علامت‌گذاری نمی‌شود؛ دوباره `/check` |
+| LLM خطا یا JSON نامعتبر | یک بار تلاش، سپس provider بعدی؛ اگر همه شکست خوردند، ایمیل UNREAD می‌ماند |
+| تلگرام 429 | `retry_after` را رعایت کن |
+| پیام ارسال شد ولی حذف UNREAD ناموفق بود | در `/check` بعدی تکراری می‌شود؛ قابل قبول، با هشدار به کاربر |
+| سقف زمان اجرا | پردازش در دسته‌های کوچک؛ اگر کامل نشد، پیام «ادامه با /check» |
 
 ---
 
-## ۸. ریسک‌ها و کاهش آن‌ها
+## ۶. امنیت
 
-| ریسک | احتمال | اثر | کاهش |
-|---|---|---|---|
-| **ToS / بن اکانت** (ارسال خودکار، اسکرپ) | پایین با طراحی فعلی | بسیار بالا | ایجنت فقط ایمیل می‌خواند؛ ثبت دستی؛ volume انسانی؛ بدون ورود به Upwork |
-| **محدودیت جغرافیایی کاربر** (ایران) | **بالا** | بسیار بالا | قبل از هر کاری تأیید حقوقی؛ بدون دور زدن |
-| Free tier تغییر یا حذف | متوسط–بالا | متوسط | Fallback chain؛ provider local |
-| LLM پروپوزال «AI-like» | بالا | پاسخ کم | placeholder، claim-check، cliché filter، بازبینی شما |
-| Hallucination (ادعای تجربه‌ی جعلی) | متوسط | بسیار بالا (اعتبار و قانونی) | grounding فقط از profile؛ claims_used؛ placeholder |
-| نشت داده‌ی ایمیل به سرویس خارجی | متوسط | بالا | فیلتر فرستنده؛ حذف footer/شماره/آدرس؛ Free tier فقط ایمیل Upwork؛ داده‌ی حساس نفرستید |
-| تلگرام برای شما در ایران مسدود است | **بالا** | بالا | VPN مسئولیت شماست؛ یا پیام به ایمیل (fallback) یا پیام‌رسان داخلی که API آن را تأیید کنید |
-| فیلدهای ایمیل ناقص (client stats) | بالا | متوسط | `null` ≠ fail؛ کاهش confidence؛ تست با ۵ ایمیل واقعی |
-| کاهش Connects / هزینه | متوسط | متوسط | بودجه‌ی ماهانه؛ MAYBE بدون پروپوزال |
-| کلاهبرداری و ایمیل‌های تقلبی (phishing) | کم–متوسط | بالا | فقط ایمیل‌های از `upwork.com`؛ SPF/DKIM را بررسی کنید؛ هیچ لینکی را ایجنت باز نمی‌کند |
+- **توکن‌ها:** توکن ربات، کلیدهای LLM و Refresh Token Gmail فقط در مکان امنی باشند. **مکان دقیق در Telegram Serverless مستند نشده**؛ قبل از ذخیره‌ی Refresh Token باید بررسی شود.
+- **حداقل دسترسی Gmail:** فقط scope خواندن و تغییر برچسب (`gmail.modify`) — نه ارسال ایمیل.
+- **حریم داده:** ایمیل‌های Upwork و پروپوزال‌ها داخل زیرساخت تلگرام پردازش و احتمالاً ذخیره می‌شوند. **پیام‌های معمولی ربات End-to-End رمزنگاری نیستند.** کاربر باید این را بپذیرد.
+- **خروج داده:** مکانیزم مستند برای export وجود ندارد. اگر روزی بخواهید پروژه را منتقل کنید، باید کد را دوباره بنویسید.
+- **Upwork ToS:** فقط خواندن ایمیل‌های خود کاربر؛ هیچ اسکرپ، هیچ ارسال خودکار پروپوزال.
+- **Git:** `.tgcloud/` و هر فایل حاوی کلید در `.gitignore`.
 
 ---
 
-## ۹. امنیت و حریم خصوصی
+## ۷. مراحل ساخت
 
-- **دسترسی حداقلی:** ترجیحاً یک آدرس Gmail اختصاصی برای Alertهای Upwork (همان ایمیلی که در تنظیمات Upwork ثبت است). اتصال با App Password (IMAP، نیازمند 2-Step Verification؛ **تأیید نشد در این جلسه**) یا OAuth با scope محدود `gmail.readonly` و فقط برای برچسب `Upwork`. جزئیات در `06`.
-- **Secrets:** `.env` با مجوز `600`، هرگز در Git؛ `.env.example` بدون کلید.
-- **داده:** SQLite محلی؛ `body_text` ایمیل بعد از ۳۰ روز پاک یا hash شود (`retention_days: 30`).
-- **لاگ:** بدون متن کامل ایمیل یا پروپوزال؛ فقط شناسه و وضعیت.
-- **LLM:** فقط بخش لازم جاب ارسال شود، نه کل ایمیل/صندوق.
-- **Git:** `profile/`، `data/`، `*.sqlite`، `.env` در `.gitignore`.
+| فاز | کار | معیار پذیرش |
+|---|---|---|
+| **۰ — آمادگی** | Node.js 18+؛ ساخت ربات با BotFather؛ `npm create @tgcloud/bot`؛ `tgcloud login` | `tgcloud push` بدون خطا؛ پیام «سلام» در تلگرام جواب بدهد |
+| **۱ — Gmail** | پروژه‌ی Google Cloud، OAuth، Refresh Token؛ فقط `/check` که ایمیل‌ها را لیست می‌کند | ۲۰ ایمیل تست → لیست درست بدون تغییر در Gmail |
+| **۲ — استخراج و امتیاز** | LLM با fallback، `score.js` | حداقل ۱۸ از ۲۰ استخراج درست (تست دستی) |
+| **۳ — پیش‌نویس و ارسال** | پروپوزال، قالب، حذف UNREAD بعد از ارسال | هیچ ادعای بدون منبع؛ هیچ تکرار در `/check` بعدی |
+| **۴ — بررسی تایمر** | آزمایش اینکه آیا تایمر یا trigger خودکار در این سرویس ممکن است | اگر ممکن نبود، همین معماری دستی می‌ماند یا به الف تغییر می‌کنیم |
+
+**معیار پذیرش MVP:** `/check` ۲۰ ایمیل تست را در چند بار پردازش کند؛ حداقل ۱۸ استخراج درست؛ پیام‌ها بدون خطای فرمت؛ هیچ پیام تکراری؛ هیچ ارسال خودکار به Upwork.
 
 ---
 
-## ۱۰. نقشه‌ی راه (فازبندی)
+## ۸. ریسک‌های معماری
 
-### MVP — یک آخر هفته (~۱۲–۱۶ ساعت کار متمرکز)
-**شنبه:**
-1. ساخت repo ساختار + `.env.example` + SQLite migrations.
-2. Gmail filter + IMAP ingest برای برچسب `Upwork` (تست با ۵ ایمیل sanitized).
-3. Parse و dedupe.
-4. Extract با **یک** provider (Gemini) + Pydantic.
+| ریسک | اثر | کنترل |
+|---|---|---|
+| پردازش دستی است | ممکن است کاربر فراموش کند | یادآوری در تلگرام؛ یا بررسی امکان trigger خودکار |
+| توکن Gmail در مکان نامطمئن | افشای ایمیل‌ها | حداقل scope؛ بررسی مکان ذخیره؛ ابطال توکن در صورت شک |
+| سقف زمان و حافظه منتشر نشده | پردازش ناتمام | دسته‌های کوچک؛ اندازه‌گیری در تست |
+| پلتفرم جدید (جولای ۲۰۲۶) | تغییر API یا قیمت | ساختار کد ساده و قابل انتقال؛ کپی نگه‌داشتن `lib/` در Git |
+| داده در زیرساخت تلگرام | کنترل کمتر روی حریم داده | پذیرش کاربر؛ ایمیل‌ها را کوتاه و بدون اطلاعات حساس نگه دارید |
+| اعداد free tier LLMها متناقض | خطا یا کندی | fallback؛ تست قبل از تکیه (فایل `04`) |
 
-**یکشنبه:**
-5. Gates + Score (rubric.v1).
-6. Proposal (یک provider) + قواعد cliché و placeholder.
-7. Telegram send (HTML، تقسیم پیام) + `/applied` `/skip` (long polling).
-8. systemd timer هر ۵ دقیقه + لاگ + پیام مدیریتی خطا.
+---
 
-**معیار پذیرش MVP:** ۲۰ ایمیل تست → حداقل ۱۸ استخراج درست؛ پیام تلگرام بدون خطای فرمت؛ هیچ پیام تکراری؛ هیچ ارسال خودکار به Upwork.
+## ۹. مراجع
 
-### فاز ۲ (هفته‌های ۲–۴)
-- Fallback chain کامل + circuit breaker.
-- Inline buttons (✅ پیش‌نویس تأیید / ✏️ ویرایش / ❌ رد) با callback.
-- Few-shot از پروپوزال‌های موفق (top-k مشابه).
-- داشبورد ساده (Markdown report هفتگی): نرخ APPLY، ویرایش، پاسخ‌ها.
-- کالیبراسیون rubric با ۵۰ جاب برچسب‌خورده.
-
-### فاز ۳ (در صورت نیاز)
-- Gmail API + Pub/Sub watch (کمتر از ۵ دقیقه تأخیر؛ نیاز به GCP + تمدید هر ۷ روز؛ تأیید شده).
-- Postgres/Supabase اگر چند کاربر یا تاریخچه‌ی بزرگ.
-- ارزیابی خودکار با LLM-as-judge + دیتاست ارزیابی.
-- بررسی Upwork API (`marketplaceJobPostingsSearch`) **فقط** اگر حساب شما شرایط رسمی را داشت و مصرف با ToS سازگار بود.
+- مستندات رسمی: core.telegram.org/bots/serverless (در این جلسه ۴۰۳ داد؛ محتوا از نقل‌ها و خبرها).
+- CLI: npm `@tgcloud/cli` v0.2.0 (MIT)؛ README و فهرست دستورها بررسی شد.
+- خبرها: Radio-T (۱۵–۱۶ جولای ۲۰۲۶)، Remio (۱۶ و ۲۰ جولای)، Quasa (۲۰ جولای)، CySecurity (گزارش با تاریخ ۲۸ جولای ۲۰۲۶)، MetaTalks (۱۶ جولای).
+- پیاده‌سازی: Postdesk (GitHub، محدودیت زمان‌بندی)، Telegram-Serverless-Bot-Template (GitHub).
+- Bot FAQ (core.telegram.org/bots/faq) برای محدودیت ارسال.
+- AWS Lambda always-free (فقط برای گزینه‌ی ب).
+- بقیه‌ی منابع در `01` تا `04`.
