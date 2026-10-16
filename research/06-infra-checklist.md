@@ -1,114 +1,58 @@
-# ۰۶ — چک‌لیست حساب‌ها و راه‌اندازی (نسخه‌ی Telegram Serverless)
+# ۰۶ — چک‌لیست حساب‌ها و راه‌اندازی (نسخه‌ی Option B: Lambda)
 
-> **پیش‌فرض:** کاربر خارج از ایران است (اعلام ۲۰۲۶-۱۰-۱۶). **قبل از هر ثبت‌نام یا خرید**، مطمئن شوید که هر سرویس در کشور شما مجاز است و حساب به نام واقعی و با آدرس واقعی ساخته می‌شود. هیچ حساب شخص ثالث، دور زدن محدودیت منطقه‌ای یا اطلاعات نادرست توصیه نمی‌شود.
->
-> **زیرساخت:** هیچ VPS، سرور، Lambda، n8n یا دیتابیس خارجی لازم نیست. کل برنامه روی Telegram Serverless اجرا می‌شود (فایل `05`).
+> **زیرساخت:** AWS Lambda + EventBridge Scheduler + SSM Parameter Store. هیچ سرور دائم، دیتابیس یا VPS لازم نیست. Telegram Serverless دیگر استفاده نمی‌شود.
+> **راهنمای گام‌به‌گام:** `bot/README.md`.
 
----
+## ۱. حساب‌ها
 
-## ۱. حساب‌ها و ابزارها
-
-| # | مورد | چرا لازم است | هزینه | شرط / یادداشت | کنترل |
+| # | سرویس | کاربرد | هزینه | نیاز به تأیید | وضعیت |
 |---|---|---|---|---|---|
-| 1 | **حساب Upwork** (Freelancer، به نام واقعی) | منبع جاب‌ها و ثبت دستی پروپوزال | رایگان (Basic) | فقط اگر کشور شما در فهرست مجاز Upwork باشد (فایل `01`) | ☐ |
-| 2 | **Gmail اختصاصی** برای Alertها | دریافت ایمیل Job Alert | رایگان | فیلتر و برچسب `Upwork-Alerts` | ☐ |
-| 3 | **پروژه‌ی Google Cloud** با Gmail API فعال | خواندن و تغییر برچسب ایمیل از طریق HTTP | رایگان (سطح عادی) | فقط scope `gmail.modify`؛ **تأیید نشد:** هزینه‌ی احتمالی و محدودیت‌های حساب شخصی | ☐ |
-| 4 | **OAuth Client و Refresh Token** | احراز هویت Gmail API | رایگان | Refresh Token را فقط در مکان امن نگه دارید؛ **تأیید نشد:** انقضای توکن در حالت Testing | ☐ |
-| 5 | **Telegram Account** | پیام‌رسان ارسال نتیجه و فرمان `/check` | رایگان | — | ☐ |
-| 6 | **Telegram Bot** (از @BotFather) و توکن | ربات برنامه | رایگان | توکن فقط در جای امن و نه در Git | ☐ |
-| 7 | **گروه یا چت خصوصی Telegram** | مقصد پیام‌ها | رایگان | فقط شما یا تیم | ☐ |
-| 8 | **Google AI Studio** (کلید Gemini) | LLM اصلی | رایگان (free tier) | بررسی منطقه و شرایط؛ داده‌ی ورودی ممکن است برای بهبود محصول استفاده شود | ☐ |
-| 9 | **Groq** (کلید) | fallback | رایگان (free tier) | بررسی منطقه و محدودیت‌ها | ☐ |
-| 10 | **OpenRouter** (کلید) | fallback با مدل `:free` | رایگان؛ ۱۰ دلار اختیاری | مدل‌های free تغییر می‌کنند | ☐ |
-| 11 | **Node.js 18+** روی سیستم شما | ساخت و deploy با `tgcloud` | رایگان | — | ☐ |
-| 12 | **Git** (مخزن خصوصی) | نسخه‌ی کد | رایگان | `.tgcloud/` را در `.gitignore` بگذارید | ☐ |
-| 13 | **Upwork Connects** | هزینه‌ی هر پروپوزال | جداگانه (تخمین $۲۰–$۶۰ در ماه) | تعداد دقیق Connects در آگهی نشان داده می‌شود | ☐ |
+| 1 | **AWS** | Lambda، EventBridge، SSM، CloudWatch | سطح رایگان؛ کارت لازم است | منطقه‌ی `eu-west-2` (لندن) پیشنهاد؛ شرایط ثبت‌نام را بخوانید | ☐ |
+| 2 | **Gmail** (اختصاصی) | ایمیل‌های Upwork-Alerts | رایگان | — | ☐ |
+| 3 | **Google Cloud** (Gmail API + OAuth Desktop) | Refresh Token | رایگان | ⚠️ تأیید نشد: انقضای توکن در حالت Testing | ☐ |
+| 4 | **Telegram** + BotFather | ارسال پیام | رایگان | — | ☐ |
+| 5 | **Google AI Studio** (Gemini) | LLM اصلی | تأیید نشد: سهمیه‌ی free tier | تأیید: بند استفاده‌ی داده در شرایط Gemini | ☐ |
+| 6 | **Groq** (اختیاری) | fallback، open-weight | تأیید نشد: سهمیه | شرایط Groq | ☐ |
+| 7 | **OpenRouter** (اختیاری) | fallback، مدل‌های `:free` | تأیید نشد: سهمیه | شرایط OpenRouter | ☐ |
+| 8 | **GitHub** (مخزن خصوصی) | کد | رایگان | — | ☐ |
 
-**حذف‌شده نسبت به نسخه‌ی قبل:** VPS، دامنه، Caddy، PostgreSQL، n8n، Lambda و EventBridge.
+**دسترسی منطقه‌ای:** کاربر خارج از ایران است؛ محدودیت منطقه‌ای برای این سرویس‌ها پذیرفته شده است، اما **شما شرایط منطقه‌ای هر سرویس را تأیید کنید.**
 
----
+## ۲. ابزارهای محلی
 
-## ۲. هزینه‌ی ماهانه (تخمین)
+- [ ] Node.js 22 (`node -v`)
+- [ ] AWS CLI v2 و `aws configure` یا SSO؛ `aws sts get-caller-identity` باید کار کند
+- [ ] AWS SAM CLI (`sam --version`)
+- [ ] Git
 
-| مورد | هزینه |
-|---|---|
-| Gmail، Telegram، Git | $۰ |
-| Telegram Serverless | $۰ (تأیید نشد: قیمت رسمی منتشر نشده) |
-| Google Cloud (Gmail API) | $۰ (تأیید نشد: سقف‌ها) |
-| LLM (free tier، ۲۰–۵۰ جاب/روز) | $۰ (اگر اعداد free tier تأیید شوند) |
-| LLM (۲۰۰ جاب/روز) | حدود $۰–۳ (تخمین) |
-| **جمع بدون Upwork** | **حدود $۰–۳** |
-| Upwork Connects | جداگانه |
+## ۳. مراحل
 
----
+1. **Gmail و OAuth:** برچسب و فیلتر، پروژه‌ی Google Cloud، Desktop client، `npm run token` → Refresh Token.
+2. **Telegram:** `/newbot` در BotFather؛ `/start` به ربات؛ `getUpdates` برای گرفتن `chat.id`.
+3. **Build:** `cd bot && npm install && npm test && npm run build`.
+4. **SSM:** `npm run secret -- <NAME>` برای هر secret (ورودی پنهان).
+5. **پروفایل:** `src/lib/profile.js` را کامل کنید (همه‌ی `[TODO]`).
+6. **Deploy:** `sam deploy --template-file infra/template.yaml --stack-name upwork-agent --capabilities CAPABILITY_IAM --resolve-s3 --region eu-west-2`.
+7. **تست:** `aws lambda invoke ...` و `aws logs tail /aws/lambda/upwork-agent --follow`.
 
-## ۳. ترتیب راه‌اندازی
+## ۴. چک‌لیست امنیت
 
-### مرحله ۰ — آمادگی
-- [ ] تأیید کنید که Upwork و هر سرویس دیگر در کشور شما مجاز است.
-- [ ] Node.js 18+ نصب است (`node -v`).
-- [ ] `07` را خوانده‌اید.
-
-### مرحله ۱ — Gmail و Google Cloud
-1. Gmail اختصاصی بسازید؛ فیلتر و برچسب `Upwork-Alerts` را تنظیم کنید.
-2. در Google Cloud یک پروژه بسازید و **Gmail API** را فعال کنید.
-3. OAuth consent screen را تنظیم کنید (نوع External، و خودتان را به‌عنوان Test user اضافه کنید).
-4. OAuth Client (نوع Desktop) بسازید؛ Client ID و Client Secret را دانلود کنید.
-5. با یک اسکریپت محلی یک‌بار اجازه بگیرید و **Refresh Token** را بگیرید (scope: `gmail.modify`). **این کار فقط روی سیستم شما انجام شود.**
-6. ایمیل Upwork تستی بفرستید و بررسی کنید که برچسب و UNREAD درست است.
-
-### مرحله ۲ — Telegram Bot
-1. با @BotFather دستور `/newbot` بزنید و توکن را ذخیره کنید.
-2. گروه یا چت خصوصی بسازید، ربات را اضافه کنید و Chat ID را پیدا کنید.
-3. یک پیام تست بفرستید و بررسی کنید `<pre>` درست نمایش داده می‌شود.
-
-### مرحله ۳ — Telegram Serverless
-1. `npm create @tgcloud/bot upwork-agent` (یا مطابق راهنمای CLI).
-2. `cd upwork-agent` و `npx tgcloud login` برای اتصال ربات.
-3. کدها را در `handlers/` و `lib/` بنویسید (فایل `05`).
-4. `npx tgcloud run handlers/message` برای تست محلی؛ سپس `npx tgcloud push`.
-5. کلیدهای LLM و Refresh Token را **طبق روش مستند tgcloud** ذخیره کنید؛ **تأیید نشد:** روش دقیق ذخیره‌ی secret در نسخه‌ی فعلی CLI.
-
-### مرحله ۴ — آزمایش
-- [ ] `/check` پیام سلام بدهد.
-- [ ] `/check` ۲۰ ایمیل تست را در چند بار پردازش کند.
-- [ ] پیام‌ها بدون خطای فرمت باشند و هیچ پیام تکراری نیاید.
-
----
-
-## ۴. امنیت (حداقل)
-
-- [ ] هیچ توکن، Client Secret یا Refresh Token در Git نباشد (`git grep` قبل از commit).
-- [ ] `.tgcloud/` و `docs/` در `.gitignore` باشند.
-- [ ] Gmail API فقط با scope `gmail.modify`.
-- [ ] Refresh Token در صورت شک ابطال شود (از تنظیمات Google Account).
-- [ ] توکن ربات در صورت لو رفتن از BotFather با `/revoke` عوض شود.
-- [ ] کاربر می‌داند پیام‌ها و داده‌ها در زیرساخت تلگرام پردازش می‌شوند.
-
----
+- [ ] هیچ کلید یا توکنی در Git نیست (`.gitignore` شامل `build/`، `node_modules/`، `.env`، `*.secret`، `*.refresh-token`)
+- [ ] secrets فقط در SSM به‌صورت SecureString هستند
+- [ ] Gmail اختصاصی است؛ Refresh Token با دسترسی `gmail.modify` است
+- [ ] هشدار هزینه‌ی AWS در Billing فعال شده است (پیشنهاد: آستانه‌ی کم)
+- [ ] کاربر تأیید کرده است که متن ایمیل به LLM ارسال می‌شود
 
 ## ۵. نگهداری
 
-| کار | زمان‌بندی |
+| کار | دوره |
 |---|---|
-| بررسی خطاهای `/check` | هر بار استفاده |
-| بررسی اعتبار Refresh Token | ماهانه |
-| بررسی فهرست مدل‌های free در OpenRouter و Groq | ماهانه |
-| بررسی تغییرات Telegram Serverless (CLI و مستندات) | هفتگی در ماه اول |
-| بررسی شرایط Upwork و LLMها | سه‌ماهه |
+| بررسی لاگ CloudWatch برای خطای تکراری | هفتگی در ماه اول |
+| بررسی سهمیه‌ی LLM و تغییر مدل‌ها | ماهانه |
+| بررسی شرایط Upwork و Gemini | سه‌ماهه |
+| به‌روزرسانی Node.js runtime در قالب | وقتی AWS نسخه‌ی جدید را حذف کرد |
 
----
+## ۶. منابع و تأیید
 
-## ۶. مواردی که هنوز تأیید نشده‌اند
-
-| مورد | وضعیت |
-|---|---|
-| مستندات رسمی Telegram Serverless (core.telegram.org) | در این جلسه ۴۰۳ داد؛ بعضی جزئیات از نقل‌ها است |
-| زمان‌بند یا trigger خودکار | گزارش متوسط: ندارد؛ باید در مرحله ۴ آزمایش شود |
-| سقف زمان اجرا، حافظه و قیمت | منتشر نشده |
-| مکان امن ذخیره‌ی secret (Refresh Token و کلیدها) | منتشر نشده؛ **مهم‌ترین مورد امنیتی** |
-| انقضای Refresh Token در حالت Testing | تأیید نشد |
-| سقف Gmail API و هزینه‌ی احتمالی Google Cloud | تأیید نشد |
-| اعداد free tier Gemini، Groq، OpenRouter | تأیید نشد (متناقض) |
-| شرایط منطقه‌ای هر LLM برای کشور شما | تأیید نشد؛ قبل از ثبت‌نام بررسی شود |
-| تعداد Connects هر جاب | تأیید نشد |
+- مستندات رسمی AWS Lambda، EventBridge Scheduler، SSM، CloudFormation/SAM.
+- قیمت‌ها و سهمیه‌ها: **تأیید نشد** در این نسخه؛ قبل از اقدام بررسی کنید.

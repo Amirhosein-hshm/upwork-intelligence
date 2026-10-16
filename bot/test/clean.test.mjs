@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanEmail, htmlToText, findJobUrl, decodeEntities } from '../tgcloud/lib/clean.js';
+import { cleanEmail, htmlToText, findJobUrl, decodeEntities } from '../src/lib/clean.js';
 
 test('decodes common entities and numeric references', () => {
   assert.equal(decodeEntities('a &amp; b &lt;c&gt; &#39;d&#39; &#x41;'), "a & b <c> 'd' A");

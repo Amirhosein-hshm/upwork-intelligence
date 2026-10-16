@@ -1,7 +1,6 @@
-# tgcloud local state (credentials, snapshot). Never commit.
-.tgcloud/
 node_modules/
 # Local secrets, if you ever keep them in files
 .env
 *.secret
 *.refresh-token
+build/

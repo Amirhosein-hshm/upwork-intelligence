@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatJobMessage, chunkText, esc, TELEGRAM_LIMIT } from '../tgcloud/lib/format.js';
-import { validateScore, validateProposal } from '../tgcloud/lib/validate.js';
-import { evaluateJob } from '../tgcloud/lib/score.js';
+import { formatJobMessage, chunkText, esc, TELEGRAM_LIMIT } from '../src/lib/format.js';
+import { validateScore, validateProposal } from '../src/lib/validate.js';
+import { evaluateJob } from '../src/lib/score.js';
 
 const job = {
   title: 'API & <Webhook> work',

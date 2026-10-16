@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateJob } from '../tgcloud/lib/score.js';
-import { validateScore } from '../tgcloud/lib/validate.js';
+import { evaluateJob } from '../src/lib/score.js';
+import { validateScore } from '../src/lib/validate.js';
 
 const rates = { hourly_min_usd: 30, fixed_min_usd: 300 };
 const prefs = { blocked_client_countries: ['Atlantis'], excluded_keywords: ['data entry'] };

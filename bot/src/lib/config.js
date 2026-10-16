@@ -1,7 +1,8 @@
-// Configuration loader. Values come from the `secrets` table (set once with
-// `endpoints/setSecret`). Pure: receives a getSecret(name) function, so it can be tested in Node.
+// Configuration loader. Values come from SSM Parameter Store (see scripts/put-secret.mjs).
+// Pure: receives a getSecret(name) function, so it can be tested in Node.
 
 export const SECRET_NAMES = [
+  'TELEGRAM_BOT_TOKEN',
   'OWNER_TG_ID',
   'GMAIL_CLIENT_ID',
   'GMAIL_CLIENT_SECRET',
@@ -24,8 +25,6 @@ export const DEFAULTS = {
   OPENROUTER_MODEL: 'openai/gpt-oss-20b:free', // تأیید نشد؛ لیست مدل‌های free را بررسی کنید
   MAX_PER_RUN: '5',
 };
-
-export const SETTABLE_SECRETS = SECRET_NAMES;
 
 export class ConfigError extends Error {
   constructor(message) {

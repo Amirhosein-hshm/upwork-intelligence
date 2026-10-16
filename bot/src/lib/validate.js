@@ -13,6 +13,15 @@ export const RED_FLAG_CODES = [
   'unusual_payment_request',
 ];
 
+// خطای ساختار/محتوای ایمیل: دائمی است، یعنی تلاش مجدد فایده ندارد
+export class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ValidationError';
+    this.permanent = true;
+  }
+}
+
 const isObj = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
 const str = (x, max) => (typeof x === 'string' && x.trim() ? x.trim().slice(0, max) : null);
 const num = (x) => {
@@ -31,13 +40,13 @@ const clampScore = (x) => {
 };
 
 export function validateExtraction(d) {
-  if (!isObj(d)) throw new Error('extract: خروجی JSON نیست');
-  if (!EMAIL_TYPES.includes(d.email_type)) throw new Error('extract: email_type نامعتبر');
+  if (!isObj(d)) throw new ValidationError('extract: خروجی JSON نیست');
+  if (!EMAIL_TYPES.includes(d.email_type)) throw new ValidationError('extract: email_type نامعتبر');
   if (d.job == null) return { email_type: d.email_type, job: null };
   const j = d.job;
-  if (!isObj(j)) throw new Error('extract: job نامعتبر');
+  if (!isObj(j)) throw new ValidationError('extract: job نامعتبر');
   const title = str(j.title, 200);
-  if (!title || title.length < 3) throw new Error('extract: عنوان جاب نیست');
+  if (!title || title.length < 3) throw new ValidationError('extract: عنوان جاب نیست');
   const url = str(j.url, 500);
   const budget = isObj(j.budget)
     ? {
@@ -78,7 +87,7 @@ export function validateExtraction(d) {
 }
 
 export function validateScore(d) {
-  if (!isObj(d)) throw new Error('score: خروجی JSON نیست');
+  if (!isObj(d)) throw new ValidationError('score: خروجی JSON نیست');
   const redFlags = (Array.isArray(d.red_flags) ? d.red_flags : [])
     .filter((f) => isObj(f) && RED_FLAG_CODES.includes(f.code))
     .map((f) => ({
@@ -97,9 +106,9 @@ export function validateScore(d) {
 }
 
 export function validateProposal(d) {
-  if (!isObj(d)) throw new Error('proposal: خروجی JSON نیست');
+  if (!isObj(d)) throw new ValidationError('proposal: خروجی JSON نیست');
   const text = str(d.proposal_text, 4000);
-  if (!text) throw new Error('proposal: متن پروپوزال خالی است');
+  if (!text) throw new ValidationError('proposal: متن پروپوزال خالی است');
   return {
     proposal_text: text,
     word_count: text.split(/\s+/).filter(Boolean).length,

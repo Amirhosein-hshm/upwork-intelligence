@@ -1,8 +1,8 @@
 // تست end-to-end جریان /check با fetch و LLM ساختگی (بدون شبکه).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { runCheck } from '../tgcloud/lib/pipeline.js';
-import { decodeBase64Url } from '../tgcloud/lib/gmail.js';
+import { runCheck } from '../src/lib/pipeline.js';
+import { decodeBase64Url } from '../src/lib/gmail.js';
 
 const b64 = (s) => Buffer.from(s, 'utf-8').toString('base64url');
 
@@ -139,11 +139,14 @@ test('non-job email (invitation) → info message, still marked read', async () 
 test('LLM failure → error message, email stays UNREAD (no modify)', async () => {
   const { fetch, calls } = makeFetch({ mails: [makeMail('m3', JOB_EMAIL)], extractReply: EXTRACT_JOB, failGemini: true });
   const sent = [];
-  const stats = await runCheck({ fetch, getSecret, send: async (t) => sent.push(t), profile: READY_PROFILE });
+  const log = { error() {}, info() {} };
+  const stats = await runCheck({ fetch, getSecret, send: async (t) => sent.push(t), profile: READY_PROFILE, log });
   assert.equal(stats.failed, 1);
+  assert.equal(stats.permanent_failed, 0);
   assert.equal(stats.job_sent, 0);
+  // خطای موقت: هیچ پیامی به تلگرام نمی‌رود و ایمیل UNREAD می‌ماند
+  assert.equal(sent.length, 0);
   assert.equal(modifyCalls(calls).length, 0);
-  assert.ok(sent.some((t) => t.includes('پردازش نشد')));
 });
 
 test('low budget → SKIP: nothing sent to Telegram, but email marked read', async () => {
@@ -160,12 +163,26 @@ test('low budget → SKIP: nothing sent to Telegram, but email marked read', asy
   assert.ok(!sent.some((t) => t.includes('<pre>')));
 });
 
-test('no unread emails → friendly message, no LLM call', async () => {
+test('no unread emails → silent, no LLM call', async () => {
   const { fetch, calls } = makeFetch({ mails: [], extractReply: EXTRACT_JOB });
   const sent = [];
   const stats = await runCheck({ fetch, getSecret, send: async (t) => sent.push(t), profile: READY_PROFILE });
   assert.equal(stats.found, 0);
+  assert.equal(sent.length, 0);
   assert.ok(!calls.some((c) => c.url.includes('generativelanguage')));
+});
+
+test('permanent content error (no job link) → one notice, marked read', async () => {
+  const noLink = JOB_EMAIL.replace('https://www.upwork.com/jobs/React-Dashboard_~0123abc', 'see our site');
+  const badExtract = { ...EXTRACT_JOB, job: { ...EXTRACT_JOB.job, url: 'https://evil.example.com/x' } };
+  const { fetch, calls } = makeFetch({ mails: [makeMail('m5', noLink)], extractReply: badExtract });
+  const sent = [];
+  const stats = await runCheck({ fetch, getSecret, send: async (t) => sent.push(t), profile: READY_PROFILE, log: { error() {}, info() {} } });
+  assert.equal(stats.permanent_failed, 1);
+  assert.equal(stats.failed, 0);
+  assert.equal(sent.length, 1);
+  assert.ok(sent[0].includes('پردازش نشد'));
+  assert.equal(modifyCalls(calls).length, 1);
 });
 
 test('profile with [TODO] refuses to run', async () => {
