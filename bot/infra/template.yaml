@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Upwork proposal agent. Reads unread Upwork alert emails every 5 minutes, drafts proposals with free-tier LLMs, sends results to Telegram. Never submits proposals.
+
+Parameters:
+  ScheduleExpression:
+    Type: String
+    Default: rate(5 minutes)
+    Description: How often to check Gmail
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [arm64]
+
+Resources:
+  AgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: upwork-agent
+      CodeUri: ../build/pkg/
+      Handler: lambda.handler
+      MemorySize: 256
+      # LLM + Gmail + Telegram برای حداکثر ۵ ایمیل؛ ۵ دقیقه سقف ایمن است
+      Timeout: 300
+      # فقط یک اجرای هم‌زمان: اجراهای همپوشان دو بار یک ایمیل را پردازش می‌کنند
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          SSM_PREFIX: /upwork-agent/
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [ssm:GetParametersByPath]
+              Resource:
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/upwork-agent
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/upwork-agent/*
+            - Effect: Allow
+              Action: [kms:Decrypt]
+              Resource: '*'
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+      Events:
+        Every5Minutes:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: !Ref ScheduleExpression
+            State: ENABLED
+      EventInvokeConfig:
+        # اجرای ناموفق خودکار دوباره فرستاده نشود؛ ایمیل‌ها UNREAD می‌مانند و اجرای بعدی آن‌ها را برمی‌دارد
+        MaximumRetryAttempts: 0
+
+  AgentLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AgentFunction}
+      RetentionInDays: 14
+
+Outputs:
+  FunctionName:
+    Value: !Ref AgentFunction
