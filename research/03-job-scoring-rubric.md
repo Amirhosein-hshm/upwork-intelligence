@@ -1,85 +1,85 @@
-# ۰۳ — Rubric امتیازدهی و فیلتر جاب‌ها
+# 03 — Job scoring rubric and filters
 
-> هدف: تصمیم «اپلای / شاید / رد» با **قواعد قطعی** (Hard gates) و **امتیاز قابل توضیح** (Weighted score). LLM فقط استخراج و توضیح می‌دهد؛ تصمیم نهایی با قواعد کد است تا پایدار و قابل آزمون باشد.
+> Goal: decide "apply / maybe / skip" with **deterministic rules** (hard gates) and an **explainable score** (weighted score). The LLM only extracts and explains; the final decision comes from code rules so it is stable and testable.
 
 ---
 
-## ۱. ترتیب تصمیم‌گیری
+## 1. Decision order
 
 ```
-Email → Extract (LLM, JSON) → Validate (Pydantic)
-      → Hard gates (کد)        ─ fail → verdict = SKIP (با دلیل)
-      → Weighted score (کد + LLM برای مهارت‌ها) 
-      → Red-flag penalties (کد + LLM)
+Email → Extract (LLM, JSON) → Validate (JSON checks)
+      → Hard gates (code)        ─ fail → verdict = SKIP (with reason)
+      → Weighted score (code + LLM for skills)
+      → Red-flag penalties (code + LLM)
       → verdict: APPLY (≥75) | MAYBE (55–74) | SKIP (<55)
-      → Proposal (فقط APPLY/MAYBE)
+      → Proposal (APPLY/MAYBE only)
 ```
 
 ---
 
-## ۲. Hard gates (هر کدام رد می‌کند)
+## 2. Hard gates (each one rejects the job)
 
-| # | قاعده | مقدار پیش‌فرض (قابل تنظیم) | دلیل |
+| # | Rule | Default value (configurable) | Reason |
 |---|---|---|---|
-| G1 | نرخ/بودجه زیر حداقل | Hourly min < $X (شما تعیین می‌کنید؛ پیش‌فرض: `hourly_min_usd: 30`) / Fixed < `fixed_min_usd: 300` | بودجه‌ی غیرمنطقی |
-| G2 | کشور کارفرما در لیست ممنوع | `blocked_client_countries: []` (تنظیم شما) | ترجیح شما |
-| G3 | نوع پروژه غیرقابل‌قبول | `excluded_categories` (مثلاً: data entry، کارهای رایگان/تست نامحدود) | ترجیح شما |
-| G4 | پرداخت تأییدنشده و بودجه‌ی پایین | `payment_verified == false` AND `budget < 500` | ریسک کلاهبرداری |
-| G5 | مهارت اصلی جاب خارج از پروفایل | `core_skill_match < 0.3` | جلوگیری از اپلای بی‌ربط |
-| G6 | درخواست واضح خروج از Upwork | `red_flags` شامل off_platform | ریسک ToS و کلاهبرداری |
-| G7 | درخواست رایگان/آزمون بدون مبلغ | `unpaid_test == true` | ارزش کم |
+| G1 | Rate/budget below the minimum | Hourly min < $X (you decide; default: `hourly_min_usd: 30`) / Fixed < `fixed_min_usd: 300` | Unreasonable budget |
+| G2 | Client country on the blocked list | `blocked_client_countries: []` (your setting) | Your preference |
+| G3 | Unacceptable project type | `excluded_categories` (e.g. data entry, free/unlimited test work) | Your preference |
+| G4 | Unverified payment with a low budget | `payment_verified == false` AND `budget < 500` | Fraud risk |
+| G5 | Job's core skill outside the profile | `core_skill_match < 0.3` | Avoid irrelevant applications |
+| G6 | Clear request to leave Upwork | `red_flags` includes off_platform | ToS and fraud risk |
+| G7 | Request for free work/unpaid test | `unpaid_test == true` | Low value |
 
-> اگر فیلدی در ایمیل نیست (مثلاً `payment_verified = null`)، **gate را fail نکنید**؛ وضعیت را `unknown` بگذارید و امتیاز را کم کنید (`confidence` پایین).
+> If a field is missing from the email (e.g. `payment_verified = null`), **do not fail the gate**; keep the status `unknown` and lower the score (low `confidence`).
 
 ---
 
-## ۳. امتیاز وزنی (۱۰۰ امتیاز)
+## 3. Weighted score (100 points)
 
-| بُعد | وزن | معیار (۰–۱۰۰ داخلی) | منبع داده |
+| Dimension | Weight | Criterion (internal 0–100) | Data source |
 |---|---|---|---|
-| **Skill match** | ۳۰ | همپوشانی مهارت‌های جاب با `profile.core_skills` و `profile.secondary_skills` | LLM + کد (نسبت) |
-| **Scope clarity & fit** | ۱۵ | آیا پروژه روشن، قابل تحویل و در حوزه‌ی شماست؟ | LLM |
-| **Budget / rate fit** | ۲۰ | بالاتر از حداقل = امتیاز بیشتر؛ Fixed با دامنه‌ی زمانی منطقی | کد |
-| **Client quality** | ۱۵ | تعداد استخدام، هزینه‌ی تاریخی، امتیاز، پرداخت تأییدشده، سابقه | کد (اگر فیلد موجود) |
-| **Timing & competition** | ۱۰ | تعداد پروپوزال‌ها کم، جاب تازه (≤۲۴ ساعت) | کد |
-| **Logistics** | ۵ | مدت/ساعت/زمان هم‌پوشان با شما، زبان انگلیسی | کد |
-| **Question fit** | ۵ | سوال‌های اختصاصی قابل پاسخ و نیاز به کار اضافی؟ | LLM |
+| **Skill match** | 30 | Overlap of job skills with `profile.core_skills` and `profile.secondary_skills` | LLM + code (ratio) |
+| **Scope clarity & fit** | 15 | Is the project clear, deliverable and within your domain? | LLM |
+| **Budget / rate fit** | 20 | Above the minimum = higher score; Fixed with a reasonable timeline | Code |
+| **Client quality** | 15 | Hires, historical spend, rating, verified payment, history | Code (if the field exists) |
+| **Timing & competition** | 10 | Few proposals, fresh job (≤24 hours) | Code |
+| **Logistics** | 5 | Duration/hours/time zone overlap with you, English | Code |
+| **Question fit** | 5 | Are the specific questions answerable without extra work? | LLM |
 
-**فرمول:**
+**Formula:**
 `score = Σ(weight_i × subscore_i / 100) − penalties`
 
-**جریمه‌ها (Red flags):**
-| پرچم | جریمه |
+**Penalties (red flags):**
+| Flag | Penalty |
 |---|---|
-| `vague_scope` (هیچ deliverable مشخص نیست) | −۸ |
-| `budget_mismatch` (بودجه با دامنه‌ی کار نمی‌خواند) | −۸ |
-| `too_many_proposals` (> ۵۰ پروپوزال) | −۵ |
-| `client_no_history` (بدون استخدام قبلی) | −۶ |
-| `pay_low_effort_high_scope` (ادعای کار بزرگ با بودجه‌ی کوچک) | −۱۰ |
-| `ask_for_free_work` (تست یا نمونه‌کار رایگان نامحدود) | −۱۵ (+ G7) |
-| `urgent_pressure_no_detail` (فشار فوری بدون جزئیات) | −۵ |
-| `off_platform_contact` (WhatsApp/Telegram/email خارج از Upwork) | −۲۰ (+ G6) |
-| `unusual_payment_request` (پرداخت خارج از Upwork یا crypto) | −۲۵ (+ G6) |
+| `vague_scope` (no concrete deliverable) | −8 |
+| `budget_mismatch` (budget does not match the scope) | −8 |
+| `too_many_proposals` (> 50 proposals) | −5 |
+| `client_no_history` (no previous hires) | −6 |
+| `pay_low_effort_high_scope` (large work claimed for a small budget) | −10 |
+| `ask_for_free_work` (unlimited free test or sample) | −15 (+ G7) |
+| `urgent_pressure_no_detail` (urgent pressure with no detail) | −5 |
+| `off_platform_contact` (WhatsApp/Telegram/email outside Upwork) | −20 (+ G6) |
+| `unusual_payment_request` (payment outside Upwork or crypto) | −25 (+ G6) |
 
-> سطح اطمینان هر جریمه را در JSON ثبت کنید (`confidence: high|medium|low`). red flag با اطمینان پایین فقط هشدار است، جریمه‌ی کامل ندارد.
+> Record each penalty's confidence in the JSON (`confidence: high|medium|low`). A low-confidence red flag is only a warning, not a full penalty.
 
 ---
 
-## ۴. آستانه‌ها
+## 4. Thresholds
 
-| Verdict | امتیاز | اقدام |
+| Verdict | Score | Action |
 |---|---|---|
-| **APPLY** | ≥ ۷۵ و هیچ gate fail نشده | پیش‌نویس پروپوزال + پیام تلگرام با 🟢 |
-| **MAYBE** | ۵۵–۷۴ | پیام با 🟡، بدون پروپوزال یا با پروپوزال کوتاه؛ تصمیم با شما |
-| **SKIP** | < ۵۵ یا gate fail | فقط در لاگ + پیام خلاصه‌ی یک‌خطی در صورت نیاز (پیش‌فرض: ارسال نشود) |
+| **APPLY** | ≥ 75 and no gate failed | Proposal draft + Telegram message with 🟢 |
+| **MAYBE** | 55–74 | Message with 🟡, no proposal or a short proposal; your decision |
+| **SKIP** | < 55 or a gate failed | Log only + a one-line summary message if needed (default: not sent) |
 
-> آستانه‌ها را بعد از ۵۰ جاب برچسب‌خورده (شما apply/skip می‌کنید) کالیبره کنید.
+> Calibrate the thresholds after 50 labelled jobs (you apply/skip).
 
 ---
 
-## ۵. Prompt استخراج (Extraction)
+## 5. Extraction prompt
 
-> نسخه: `extract.v1`. ورودی: متن ساده‌شده‌ی ایمیل (بدون HTML، بدون لینک‌های tracking، با حذف امضا و footer).
+> Version: `extract.v1`. Input: the simplified email text (no HTML, no tracking links, signature and footer removed).
 
 ```text
 ROLE
@@ -102,9 +102,9 @@ SCHEMA
 
 ---
 
-## ۶. Prompt ارزیابی (Scoring/Explanation)
+## 6. Scoring/Explanation prompt
 
-> نسخه: `score.v1`. این پرامپت فقط زیرامتیازهای LLM (Skill, Scope, Question fit) و **توضیح فارسی** تولید می‌کند. محاسبه‌ی نهایی با کد است.
+> Version: `score.v1`. This prompt only produces the LLM subscores (Skill, Scope, Question fit) and an **English summary**. The final calculation is done in code.
 
 ```text
 ROLE
@@ -116,7 +116,7 @@ OUTPUT JSON ONLY:
 - question_fit: 0-100 (are screening questions answerable with the profile? 100 = none needed)
 - red_flags: array of {code, evidence_quote, confidence: "high"|"medium"|"low"}
   allowed codes: vague_scope, budget_mismatch, too_many_proposals, client_no_history, pay_low_effort_high_scope, ask_for_free_work, urgent_pressure_no_detail, off_platform_contact, unusual_payment_request
-- summary_fa: Persian summary in at most 3 short sentences: what the job is, why it fits or not, the main risk.
+- summary_en: English summary in at most 3 short sentences: what the job is, why it fits or not, the main risk.
 - missing_info: array of up to 3 questions the freelancer should answer before applying
 
 RULES
@@ -128,7 +128,7 @@ RULES
 
 ---
 
-## ۷. JSON Schema — استخراج جاب (Extraction)
+## 7. JSON Schema — job extraction
 
 ```json
 {
@@ -190,14 +190,14 @@ RULES
 }
 ```
 
-## ۸. JSON Schema — ارزیابی (Evaluation)
+## 8. JSON Schema — evaluation
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "UpworkJobEvaluation",
   "type": "object",
-  "required": ["job_id", "gates", "subscores", "red_flags", "score", "verdict", "summary_fa"],
+  "required": ["job_id", "gates", "subscores", "red_flags", "score", "verdict", "summary_en"],
   "additionalProperties": false,
   "properties": {
     "job_id": { "type": "string" },
@@ -238,7 +238,7 @@ RULES
     "score": { "type": "number", "minimum": 0, "maximum": 100 },
     "verdict": { "type": "string", "enum": ["APPLY", "MAYBE", "SKIP"] },
     "missing_info": { "type": "array", "items": { "type": "string" }, "maxItems": 3 },
-    "summary_fa": { "type": "string", "maxLength": 500 },
+    "summary_en": { "type": "string", "maxLength": 500 },
     "rubric_version": { "type": "string", "examples": ["rubric.v1"] },
     "model": { "type": "string" }
   }
@@ -247,50 +247,50 @@ RULES
 
 ---
 
-## ۹. پروفایل شما (فرمت YAML؛ باید تکمیل شود)
+## 9. Your profile (YAML format; must be completed)
 
 ```yaml
-# profile.yaml — تنها منبع حقایق برای پروپوزال و امتیازدهی
+# profile.yaml — the only source of facts for proposals and scoring
 identity:
-  headline: "[مثلاً: Frontend Engineer — React/Next.js]"
-  years_experience: "[عدد]"
-  english_level: "[مثلاً: C1]"
-  location_for_clients: "[فقط اگر قانونی و صادقانه قابل ذکر است]"
-core_skills: ["[مثلاً React]", "[Next.js]", "[TypeScript]"]
+  headline: "[e.g. Frontend Engineer — React/Next.js]"
+  years_experience: "[number]"
+  english_level: "[e.g. C1]"
+  location_for_clients: "[only if it is legal and honest to mention]"
+core_skills: ["[e.g. React]", "[Next.js]", "[TypeScript]"]
 secondary_skills: ["[...]"]
 rates:
-  hourly_min_usd: 30        # [تنظیم شما]
-  fixed_min_usd: 300        # [تنظیم شما]
+  hourly_min_usd: 30        # [your setting]
+  fixed_min_usd: 300        # [your setting]
 preferences:
   preferred_project_types: ["[...]"]
-  excluded_project_types: ["[مثلاً: data entry، رایگان نامحدود]"]
+  excluded_project_types: ["[e.g. data entry, unlimited free work]"]
   preferred_client_countries: ["[...]"]
   blocked_client_countries: ["[...]"]
-  min_client_rating: 4.5     # اختیاری
+  min_client_rating: 4.5     # optional
   require_payment_verified: true
-proof_points:   # فقط مواردی که شما تأیید کرده‌اید
+proof_points:   # only items you have confirmed
   - id: pp1
-    text: "[نتیجه‌ی عددی یا توصیف واقعی]"
-    evidence_url: "[لینک نمونه‌کار عمومی]"
+    text: "[a numeric result or a true description]"
+    evidence_url: "[public portfolio link]"
 portfolio:
   - name: "[...]"
     url: "[...]"
     stack: ["[...]"]
     role: "[...]"
 tone: "direct, friendly, professional"
-writing_samples_dir: "examples/"   # ۲–۳ پروپوزال موفق شما
+writing_samples_dir: "examples/"   # 2–3 of your successful proposals
 ```
 
 ---
 
-## ۱۰. قواعد تست (Acceptance tests برای Rubric)
+## 10. Test rules (acceptance tests for the rubric)
 
-| تست | انتظار |
+| Test | Expectation |
 |---|---|
-| ایمیل بدون جزئیات جاب (`invitation`) | job=null، verdict ندارد، در صف ارسال نمی‌شود |
-| بودجه کمتر از حداقل | G1 fail، verdict=SKIP |
-| پرداخت تأییدنشده + بودجه ۲۰۰ دلار | G4 fail |
-| درخواست خارج از Upwork (واتساپ) | red flag `off_platform_contact` + G6 |
-| جاب کاملاً خارج از پروفایل | G5 fail یا skill_match<40 |
-| فیلد نامشخص `payment_verified=null` | gate fail نمی‌شود؛ confidence کم |
-| ۵۰ جاب برچسب‌خورده | precision برای APPLY ≥ ۶۰٪ (هدف اولیه) |
+| Email without job details (`invitation`) | job=null, no verdict, not queued for sending |
+| Budget below the minimum | G1 fail, verdict=SKIP |
+| Unverified payment + $200 budget | G4 fail |
+| Request to move outside Upwork (WhatsApp) | red flag `off_platform_contact` + G6 |
+| Job completely outside the profile | G5 fail or skill_match<40 |
+| Unknown field `payment_verified=null` | Gate does not fail; low confidence |
+| 50 labelled jobs | Precision for APPLY ≥ 60% (initial target) |

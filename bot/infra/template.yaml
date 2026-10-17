@@ -21,9 +21,9 @@ Resources:
       CodeUri: ../build/pkg/
       Handler: lambda.handler
       MemorySize: 256
-      # LLM + Gmail + Telegram برای حداکثر ۵ ایمیل؛ ۵ دقیقه سقف ایمن است
+      # LLM + Gmail + Telegram for up to 5 emails; 5 minutes is a safe ceiling
       Timeout: 300
-      # فقط یک اجرای هم‌زمان: اجراهای همپوشان دو بار یک ایمیل را پردازش می‌کنند
+      # One concurrent execution only: overlapping runs would process the same email twice
       ReservedConcurrentExecutions: 1
       Environment:
         Variables:
@@ -48,7 +48,7 @@ Resources:
             ScheduleExpression: !Ref ScheduleExpression
             State: ENABLED
       EventInvokeConfig:
-        # اجرای ناموفق خودکار دوباره فرستاده نشود؛ ایمیل‌ها UNREAD می‌مانند و اجرای بعدی آن‌ها را برمی‌دارد
+        # Do not retry a failed invocation automatically; emails stay UNREAD for the next run
         MaximumRetryAttempts: 0
 
   AgentLogGroup:

@@ -17,12 +17,12 @@ export const SECRET_NAMES = [
   'MAX_PER_RUN',
 ];
 
-// Non-secret defaults. Model names change often; override them with setSecret.
+// Non-secret defaults. Model names change often; override them with put-secret.mjs.
 export const DEFAULTS = {
-  GMAIL_QUERY: 'label:"Upwork-Alerts" is:unread', // نام برچسب را با همان چیزی که در Gmail ساختید یکی کنید
-  GEMINI_MODEL: 'gemini-3.1-flash-lite', // تأیید نشد برای free tier؛ قبل از استفاده بررسی شود
-  GROQ_MODEL: 'openai/gpt-oss-20b',      // از صفحه‌ی Supported Models گروک (open-weight)
-  OPENROUTER_MODEL: 'openai/gpt-oss-20b:free', // تأیید نشد؛ لیست مدل‌های free را بررسی کنید
+  GMAIL_QUERY: 'label:"Upwork-Alerts" is:unread', // Match the label name you created in Gmail.
+  GEMINI_MODEL: 'gemini-3.1-flash-lite', // Unverified for the free tier; check before use.
+  GROQ_MODEL: 'openai/gpt-oss-20b',      // From Groq's Supported Models page (open-weight).
+  OPENROUTER_MODEL: 'openai/gpt-oss-20b:free', // Unverified; check the free model list.
   MAX_PER_RUN: '5',
 };
 
@@ -44,13 +44,13 @@ export async function loadConfig(getSecret) {
   if (!raw.GMAIL_CLIENT_SECRET) missing.push('GMAIL_CLIENT_SECRET');
   if (!raw.GMAIL_REFRESH_TOKEN) missing.push('GMAIL_REFRESH_TOKEN');
   if (!raw.GEMINI_API_KEY && !raw.GROQ_API_KEY && !raw.OPENROUTER_API_KEY) {
-    missing.push('GEMINI_API_KEY یا GROQ_API_KEY یا OPENROUTER_API_KEY (حداقل یکی)');
+    missing.push('GEMINI_API_KEY or GROQ_API_KEY or OPENROUTER_API_KEY (at least one)');
   }
   if (missing.length) {
-    throw new ConfigError(`تنظیمات ناقص است: ${missing.join(', ')}`);
+    throw new ConfigError(`Incomplete configuration: ${missing.join(', ')}`);
   }
 
-  // LLM providers in fallback order: Gemini → Groq → OpenRouter.
+  // LLM providers in fallback order: Gemini -> Groq -> OpenRouter.
   const llm = [];
   if (raw.GEMINI_API_KEY) llm.push({ name: 'gemini', key: raw.GEMINI_API_KEY, model: raw.GEMINI_MODEL });
   if (raw.GROQ_API_KEY) llm.push({ name: 'groq', key: raw.GROQ_API_KEY, model: raw.GROQ_MODEL });

@@ -1,10 +1,10 @@
-// تست end-to-end نقطه‌ی ورود Lambda: SSM و fetch (Gmail، LLM، Telegram) ساختگی‌اند.
+// End-to-end test of the Lambda entry point: SSM and fetch (Gmail, LLM, Telegram) are stubbed.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { SSMClient } from '@aws-sdk/client-ssm';
 
 import { PROFILE } from '../src/lib/profile.js';
-// پروفایل واقعی هنوز [TODO] دارد (عمداً). در تست، مقدار ساختگی درون حافظه‌ی همین فرایند می‌گذاریم.
+// The real profile still has [TODO] on purpose. The test replaces it in memory for this process only.
 Object.assign(PROFILE, {
   identity: { headline: 'Frontend engineer', years_experience: '6', english_level: 'C1' },
   core_skills: ['React', 'Node.js'],
@@ -52,7 +52,7 @@ const EXTRACT = {
   },
   extraction_notes: [],
 };
-const SCORE = { skill_match: 90, scope_clarity: 85, question_fit: 80, red_flags: [], summary_fa: 'مناسب', missing_info: [] };
+const SCORE = { skill_match: 90, scope_clarity: 85, question_fit: 80, red_flags: [], summary_en: 'Good fit', missing_info: [] };
 const PROPOSAL = { proposal_text: 'Charts first. I cut load time 40% before.\n\nWhich chart types matter?', placeholders: [], do_not_apply_recommended: false };
 
 const calls = [];
@@ -90,6 +90,6 @@ test('scheduled run: job found → Telegram message to owner → email marked re
   const mod = calls.find((c) => c.url.endsWith('/modify'));
   assert.ok(mod, 'UNREAD removed after send');
   assert.deepEqual(JSON.parse(mod.body), { removeLabelIds: ['UNREAD'] });
-  // ترتیب: ارسال قبل از علامت‌گذاری
+  // Order: send before marking as read
   assert.ok(calls.indexOf(tg[0]) < calls.indexOf(mod));
 });

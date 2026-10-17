@@ -1,75 +1,75 @@
-# ۰۵ — معماری سیستم (نسخه‌ی Option B: Lambda + EventBridge)
+# 05 — System architecture (Option B: Lambda + EventBridge)
 
-> **تصمیم:** کاربر گزینه‌ی **ب** را انتخاب کرد: اجرای خودکار هر ۵ دقیقه با AWS Lambda و EventBridge. مسیر دستی `/check` و Telegram Serverless برای اجرا کنار گذاشته شد. دلیل: «خودکار باشد».
-> **پیاده‌سازی:** پوشه‌ی `bot/` در همین مخزن. راهنمای نصب در `bot/README.md`.
+> **Decision:** the user chose **Option B**: automatic execution every 5 minutes with AWS Lambda and EventBridge. The manual `/check` path and Telegram Serverless were set aside. Reason: "it should be automatic".
+> **Implementation:** the `bot/` folder in this repository. Setup guide: `bot/README.md`; account-owner deployment guide: `bot/DEPLOY-AWS.md`.
 
-## ۱. جریان کلی
+## 1. Overall flow
 
 ```
 EventBridge Scheduler (rate(5 minutes))
    │
    ▼
 Lambda: upwork-agent (nodejs22.x, arm64, 256 MB, timeout 300 s, concurrency 1)
-   │ 1. secrets را از SSM Parameter Store (SecureString) می‌خواند
-   │ 2. Gmail API: ایمیل‌های label:"Upwork-Alerts" + is:unread (حداکثر MAX_PER_RUN)
-   │ 3. متن را پاک می‌کند، LLM استخراج می‌کند، امتیازدهی قطعی (G1–G7 + وزن‌ها)
-   │ 4. فقط جاب‌های 🟢 APPLY / 🟡 MAYBE: پیش‌نویس پروپوزال با LLM
-   │ 5. پیام را با Telegram Bot API (sendMessage) برای مالک می‌فرستد
-   │ 6. بعد از ارسال موفق، UNREAD را برمی‌دارد
+   │ 1. reads secrets from SSM Parameter Store (SecureString)
+   │ 2. Gmail API: label:"Upwork-Alerts" + is:unread emails (up to MAX_PER_RUN)
+   │ 3. cleans the text, LLM extracts, deterministic scoring (G1–G7 + weights)
+   │ 4. only 🟢 APPLY / 🟡 MAYBE jobs: draft a proposal with the LLM
+   │ 5. sends the message to the owner with the Telegram Bot API (sendMessage)
+   │ 6. after a successful send, removes UNREAD
    ▼
-Telegram (گوشی شما) → شما بازبینی و ارسال دستی در Upwork
+Telegram (your phone) → you review and submit manually on Upwork
 ```
 
-## ۲. اجزا و دلیل انتخاب
+## 2. Components and why they were chosen
 
-| جزء | نقش | چرا |
+| Component | Role | Why |
 |---|---|---|
-| **EventBridge Scheduler** | اجرای هر ۵ دقیقه | زمان‌بند رسمی AWS؛ سطح رایگان بزرگ |
-| **Lambda** | اجرای منطق | بدون سرور دائم؛ سطح رایگان: ۱ میلیون درخواست و ۴۰۰٬۰۰۰ GB-second در ماه (تأیید نشد: قیمت و سقف‌ها را در صفحه‌ی رسمی AWS بررسی کنید) |
-| **SSM Parameter Store** | نگهداری کلیدها | SecureString رمزنگاری‌شده با KMS؛ Standard رایگان؛ بدون دیتابیس |
-| **Gmail API** | خواندن ایمیل و حذف UNREAD | تنها وضعیت dedupe؛ دیتابیس لازم نیست |
-| **Gemini → Groq → OpenRouter** | LLM با fallback | همه free tier یا open-weight؛ تفصیل در `04` |
-| **Telegram Bot API** | ارسال پیام | رایگان؛ بدون webhook (فقط خروجی) |
-| **CloudWatch Logs** | لاگ | نگهداری ۱۴ روز (تنظیم در قالب) |
+| **EventBridge Scheduler** | Run every 5 minutes | Official AWS scheduler; large free tier |
+| **Lambda** | Execute the logic | No permanent server; free tier: 1 million requests and 400,000 GB-seconds per month (unconfirmed: check pricing and limits on the official AWS page) |
+| **SSM Parameter Store** | Store keys | SecureString encrypted with KMS; Standard is free; no database |
+| **Gmail API** | Read email and remove UNREAD | The only dedupe state; no database needed |
+| **Gemini → Groq → OpenRouter** | LLM with fallback | All free tier or open-weight; details in `04` |
+| **Telegram Bot API** | Send messages | Free; no webhook (outbound only) |
+| **CloudWatch Logs** | Logs | 14-day retention (set in the template) |
 
-**چیزی ذخیره نمی‌شود:** متن ایمیل، پروپوزال یا دیتابیس. تنها state، برچسب UNREAD در Gmail است.
+**Nothing is stored:** no email text, proposal or database. The only state is the UNREAD label in Gmail.
 
-## ۳. مدیریت خطا
+## 3. Error handling
 
-| وضعیت | رفتار |
+| Situation | Behaviour |
 |---|---|
-| خطای موقت (شبکه، سهمیه‌ی LLM، Gmail 5xx) | لاگ؛ ایمیل UNREAD می‌ماند؛ اجرای بعدی دوباره امتحان می‌کند. **پیام به تلگرام نمی‌رود.** |
-| خطای دائمی یک ایمیل (لینک جاب ندارد، خروجی LLM نامعتبر) | یک اعلان به تلگرام؛ ایمیل خوانده‌شده می‌شود تا تکرار نشود |
-| خطای کل اجرا (مثلاً Refresh Token Gmail باطل) | پیام `⚠️` به مالک در هر اجرا تا رفع مشکل؛ AWS retry ندارد |
-| ارسال موفق ولی حذف UNREAD ناموفق | در اجرای بعدی تکراری ارسال می‌شود. **ریسک پذیرفته‌شده**؛ علت: نبود دیتابیس |
-| اجرای هم‌زمان | `ReservedConcurrentExecutions: 1` جلوی آن را می‌گیرد |
+| Transient error (network, LLM quota, Gmail 5xx) | Log; the email stays UNREAD; the next run tries again. **Nothing is sent to Telegram.** |
+| Permanent error for one email (no job link, invalid LLM output) | One notification to Telegram; the email is marked read so it does not repeat |
+| Whole-run error (e.g. invalid Gmail Refresh Token) | A `⚠️` message to the owner on every run until fixed; AWS does not retry |
+| Successful send but UNREAD removal fails | The next run sends it again. **Accepted risk**; cause: no database |
+| Concurrent executions | `ReservedConcurrentExecutions: 1` prevents it |
 
-## ۴. امنیت و ToS
+## 4. Security and ToS
 
-- **ارسال خودکار پروپوزال وجود ندارد.** ربات فقط پیش‌نویس و امتیاز می‌دهد؛ شما ارسال می‌کنید.
-- **کلیدها** فقط در SSM هستند؛ در Git و متغیر محیطی Lambda نیستند. IAM فقط `ssm:GetParametersByPath` روی `/upwork-agent/*` و `kms:Decrypt` از طریق SSM دارد.
-- **حریم خصوصی:** متن ایمیل به ارائه‌دهنده‌ی LLM می‌رود. شرایط Gemini (نسخه‌ی ۲۳ مارس ۲۰۲۶) می‌گوید ورودی‌های سرویس رایگان ممکن است برای بهبود محصول استفاده شود. **نیاز به تأیید شما.**
-- **Upwork:** استفاده از ایمیل‌های alert با ابزار خودکار برای تحلیل، و نه ارسال خودکار، در محدوده‌ی تعهد شماست. بند دقیق ToS درباره‌ی این کار **تأیید نشد**؛ قبل از استفاده گسترده بازبینی کنید.
-- **دسترسی از ایران:** Upwork برای ایران محدود است و این پروژه هیچ راهی برای دور زدن آن پیشنهاد نمی‌کند. شما در لندن هستید.
+- **There is no automatic proposal submission.** The bot only scores and drafts; you submit.
+- **Keys** live only in SSM; they are not in Git or in Lambda environment variables. IAM only allows `ssm:GetParametersByPath` on `/upwork-agent/*` and `kms:Decrypt` through SSM.
+- **Privacy:** email text goes to the LLM provider. The Gemini terms (version of 23 March 2026) say free-service inputs may be used to improve the product. **Your confirmation is required.**
+- **Upwork:** using alert emails with an automated tool for analysis, not automatic submission, is within the scope of your commitment. The exact ToS clause about this is **unconfirmed**; review it before using the tool at scale.
+- **Access from Iran:** Upwork is restricted for Iran and this project offers no way around it. The account holder has stated they live outside Iran.
 
-## ۵. محدودیت‌ها
+## 5. Limitations
 
-- **زمان‌بندی:** حداقل فاصله‌ی ۵ دقیقه؛ ایمیل‌ها حداکثر با تأخیر چند دقیقه‌ای می‌رسند (تأیید نشد: تأخیر ۱۵ دقیقه‌ای ایمیل‌های Upwork از منابع ثانویه).
-- **ظرفیت:** `MAX_PER_RUN` (پیش‌فرض ۵، حداکثر ۱۰) در هر اجرا؛ بقیه در اجرای بعدی.
-- **سهمیه LLM:** free tier محدود است؛ برای ~۲۰۰ ایمیل روزانه ممکن است کافی نباشد (تأیید نشد برای هر سرویس؛ قبل از استفاده بررسی شود).
+- **Scheduling:** minimum interval 5 minutes; emails arrive with at most a few minutes' delay (unconfirmed: the 15-minute delay of Upwork emails comes from secondary sources).
+- **Capacity:** `MAX_PER_RUN` (default 5, maximum 10) per run; the rest wait for the next run.
+- **LLM quota:** the free tier is limited; for ~200 emails per day it may not be enough (unconfirmed for each service; check before use).
 
-## ۶. فازها
+## 6. Phases
 
-| فاز | محتوا | معیار پایان |
+| Phase | Content | Completion criterion |
 |---|---|---|
-| **۰ — آمادگی** | حساب AWS، AWS CLI و SAM CLI، Gmail و Google OAuth، BotFather، کلیدهای LLM | `aws sts get-caller-identity` کار کند |
-| **۱ — پایه** | `npm test` (۳۱ تست)، `npm run build`، `sam deploy`، ذخیره‌ی secrets | `aws lambda invoke` بدون خطا و پیام تلگرام برای ایمیل تست |
-| **۲ — کیفیت** | پروفایل واقعی، بررسی ۲۰ ایمیل تست | حداقل ۱۸ استخراج درست از ۲۰ |
-| **۳ — عملیاتی** | اجرای خودکار، پایش لاگ یک هفته‌ای | خطای تکراری نداشته باشد |
+| **0 — Preparation** | AWS account, AWS CLI and SAM CLI, Gmail and Google OAuth, BotFather, LLM keys | `aws sts get-caller-identity` works |
+| **1 — Foundation** | `npm test` (31 tests), `npm run build`, `sam deploy`, storing secrets | `aws lambda invoke` without errors and a Telegram message for a test email |
+| **2 — Quality** | Real profile, review of 20 test emails | At least 18 correct extractions out of 20 |
+| **3 — Operations** | Automatic execution, one week of log monitoring | No repeating errors |
 
-## ۷. منابع
+## 7. Sources
 
-- AWS Lambda، EventBridge Scheduler، SSM Parameter Store: مستندات رسمی AWS (تأیید نشد: جزئیات قیمت و سهمیه‌ی فعلی).
-- Telegram Bot API `sendMessage` و محدودیت‌های ۴٬۰۹۶ کاراکتر و ۴۲۹ (منبع ثانویه؛ مستندات رسمی `core.telegram.org/bots/api` را تأیید کنید).
-- Gmail API `users.messages.list`، `users.messages.get`، `users.messages.modify`.
-- ابزار: AWS SAM (`infra/template.yaml`)، Node.js 22.
+- AWS Lambda, EventBridge Scheduler, SSM Parameter Store: official AWS documentation (unconfirmed: current pricing and quota details).
+- Telegram Bot API `sendMessage` and the 4,096-character and 429 limits (secondary source; verify against the official `core.telegram.org/bots/api` docs).
+- Gmail API `users.messages.list`, `users.messages.get`, `users.messages.modify`.
+- Tooling: AWS SAM (`infra/template.yaml`), Node.js 22.

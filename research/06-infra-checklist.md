@@ -1,58 +1,60 @@
-# ۰۶ — چک‌لیست حساب‌ها و راه‌اندازی (نسخه‌ی Option B: Lambda)
+# 06 — Accounts and setup checklist (Option B: Lambda)
 
-> **زیرساخت:** AWS Lambda + EventBridge Scheduler + SSM Parameter Store. هیچ سرور دائم، دیتابیس یا VPS لازم نیست. Telegram Serverless دیگر استفاده نمی‌شود.
-> **راهنمای گام‌به‌گام:** `bot/README.md`.
+> **Infrastructure:** AWS Lambda + EventBridge Scheduler + SSM Parameter Store. No permanent server, database or VPS is needed. Telegram Serverless is no longer used.
+> **Step-by-step guide:** `bot/README.md` for developers; `bot/DEPLOY-AWS.md` for the AWS account owner.
 
-## ۱. حساب‌ها
+## 1. Accounts
 
-| # | سرویس | کاربرد | هزینه | نیاز به تأیید | وضعیت |
+| # | Service | Purpose | Cost | Needs confirmation | Status |
 |---|---|---|---|---|---|
-| 1 | **AWS** | Lambda، EventBridge، SSM، CloudWatch | سطح رایگان؛ کارت لازم است | منطقه‌ی `eu-west-2` (لندن) پیشنهاد؛ شرایط ثبت‌نام را بخوانید | ☐ |
-| 2 | **Gmail** (اختصاصی) | ایمیل‌های Upwork-Alerts | رایگان | — | ☐ |
-| 3 | **Google Cloud** (Gmail API + OAuth Desktop) | Refresh Token | رایگان | ⚠️ تأیید نشد: انقضای توکن در حالت Testing | ☐ |
-| 4 | **Telegram** + BotFather | ارسال پیام | رایگان | — | ☐ |
-| 5 | **Google AI Studio** (Gemini) | LLM اصلی | تأیید نشد: سهمیه‌ی free tier | تأیید: بند استفاده‌ی داده در شرایط Gemini | ☐ |
-| 6 | **Groq** (اختیاری) | fallback، open-weight | تأیید نشد: سهمیه | شرایط Groq | ☐ |
-| 7 | **OpenRouter** (اختیاری) | fallback، مدل‌های `:free` | تأیید نشد: سهمیه | شرایط OpenRouter | ☐ |
-| 8 | **GitHub** (مخزن خصوصی) | کد | رایگان | — | ☐ |
+| 1 | **AWS** | Lambda, EventBridge, SSM, CloudWatch | Free tier; a card is required | Region choice (e.g. `eu-west-2` London); read the sign-up terms | ☐ |
+| 2 | **Gmail** (dedicated) | Upwork-Alerts emails | Free | — | ☐ |
+| 3 | **Google Cloud** (Gmail API + OAuth Desktop) | Refresh Token | Free | ⚠️ Confirmed 2026-10-17: with publishing status "Testing", the refresh token expires after 7 days; publish the app or refresh weekly | ☐ |
+| 4 | **Telegram** + BotFather | Send messages | Free | — | ☐ |
+| 5 | **Google AI Studio** (Gemini) | Primary LLM | Unconfirmed: free-tier quota | Confirm: data-use clause in the Gemini terms | ☐ |
+| 6 | **Groq** (optional) | Fallback, open-weight | Unconfirmed: quota | Groq terms | ☐ |
+| 7 | **OpenRouter** (optional) | Fallback, `:free` models | Unconfirmed: quota | OpenRouter terms | ☐ |
+| 8 | **GitHub** (private repository) | Code | Free | — | ☐ |
 
-**دسترسی منطقه‌ای:** کاربر خارج از ایران است؛ محدودیت منطقه‌ای برای این سرویس‌ها پذیرفته شده است، اما **شما شرایط منطقه‌ای هر سرویس را تأیید کنید.**
+**Regional access:** the user is outside Iran; regional restrictions for these services are accepted, but **confirm each service's regional terms yourself.**
 
-## ۲. ابزارهای محلی
+## 2. Local tools
 
 - [ ] Node.js 22 (`node -v`)
-- [ ] AWS CLI v2 و `aws configure` یا SSO؛ `aws sts get-caller-identity` باید کار کند
+- [ ] AWS CLI v2 and `aws configure` or SSO; `aws sts get-caller-identity` must work
 - [ ] AWS SAM CLI (`sam --version`)
 - [ ] Git
 
-## ۳. مراحل
+## 3. Steps
 
-1. **Gmail و OAuth:** برچسب و فیلتر، پروژه‌ی Google Cloud، Desktop client، `npm run token` → Refresh Token.
-2. **Telegram:** `/newbot` در BotFather؛ `/start` به ربات؛ `getUpdates` برای گرفتن `chat.id`.
+1. **Gmail and OAuth:** label and filter, Google Cloud project, Desktop client, `npm run token` → Refresh Token.
+2. **Telegram:** `/newbot` in BotFather; `/start` to the bot; `getUpdates` to obtain `chat.id`.
 3. **Build:** `cd bot && npm install && npm test && npm run build`.
-4. **SSM:** `npm run secret -- <NAME>` برای هر secret (ورودی پنهان).
-5. **پروفایل:** `src/lib/profile.js` را کامل کنید (همه‌ی `[TODO]`).
-6. **Deploy:** `sam deploy --template-file infra/template.yaml --stack-name upwork-agent --capabilities CAPABILITY_IAM --resolve-s3 --region eu-west-2`.
-7. **تست:** `aws lambda invoke ...` و `aws logs tail /aws/lambda/upwork-agent --follow`.
+4. **SSM:** `npm run secret -- <NAME>` for each secret (hidden input).
+5. **Profile:** complete `src/lib/profile.js` (every `[TODO]`).
+6. **Deploy:** `sam build --template-file infra/template.yaml` then `sam deploy ...` (see `bot/DEPLOY-AWS.md` for the exact command).
+7. **Test:** `aws lambda invoke ...` and `aws logs tail /aws/lambda/upwork-agent --follow`.
 
-## ۴. چک‌لیست امنیت
+## 4. Security checklist
 
-- [ ] هیچ کلید یا توکنی در Git نیست (`.gitignore` شامل `build/`، `node_modules/`، `.env`، `*.secret`، `*.refresh-token`)
-- [ ] secrets فقط در SSM به‌صورت SecureString هستند
-- [ ] Gmail اختصاصی است؛ Refresh Token با دسترسی `gmail.modify` است
-- [ ] هشدار هزینه‌ی AWS در Billing فعال شده است (پیشنهاد: آستانه‌ی کم)
-- [ ] کاربر تأیید کرده است که متن ایمیل به LLM ارسال می‌شود
+- [ ] No key or token is in Git (`.gitignore` covers `build/`, `.aws-sam/`, `node_modules/`, `.env`, `*.secret`, `*.refresh-token`)
+- [ ] Secrets exist only in SSM as SecureString
+- [ ] Gmail is dedicated; the Refresh Token has the `gmail.modify` scope
+- [ ] An AWS cost alert is enabled in Billing (suggested: a low threshold)
+- [ ] The user has confirmed that email text is sent to the LLM
 
-## ۵. نگهداری
+## 5. Maintenance
 
-| کار | دوره |
+| Task | Frequency |
 |---|---|
-| بررسی لاگ CloudWatch برای خطای تکراری | هفتگی در ماه اول |
-| بررسی سهمیه‌ی LLM و تغییر مدل‌ها | ماهانه |
-| بررسی شرایط Upwork و Gemini | سه‌ماهه |
-| به‌روزرسانی Node.js runtime در قالب | وقتی AWS نسخه‌ی جدید را حذف کرد |
+| Review CloudWatch logs for repeating errors | Weekly during the first month |
+| Check LLM quotas and model changes | Monthly |
+| Review Upwork and Gemini terms | Quarterly |
+| Update the Node.js runtime in the template | When AWS deprecates the version |
+| Regenerate the Gmail refresh token | Weekly while the OAuth app is in "Testing"; not needed once it is "In production" |
 
-## ۶. منابع و تأیید
+## 6. Sources and confirmation
 
-- مستندات رسمی AWS Lambda، EventBridge Scheduler، SSM، CloudFormation/SAM.
-- قیمت‌ها و سهمیه‌ها: **تأیید نشد** در این نسخه؛ قبل از اقدام بررسی کنید.
+- Official AWS Lambda, EventBridge Scheduler, SSM, CloudFormation/SAM documentation.
+- Prices and quotas: **unconfirmed** in this version; check before acting.
+- Google OAuth refresh-token expiry in Testing status: official Google documentation, [Using OAuth 2.0 to Access Google APIs](https://developers.google.com/identity/protocols/oauth2).

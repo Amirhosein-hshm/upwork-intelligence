@@ -1,79 +1,84 @@
-# Upwork Proposal Agent — راهنمای نصب و Deploy (AWS Lambda)
+# Upwork Proposal Agent — setup and deployment guide (AWS Lambda)
 
-هر ۵ دقیقه، Lambda ایمیل‌های خوانده‌نشده‌ی برچسب `Upwork-Alerts` را از Gmail می‌خواند، با LLM استخراج و امتیازدهی می‌کند، برای جاب‌های مناسب (🟢 APPLY / 🟡 MAYBE) پیش‌نویس پروپوزال می‌سازد و مستقیم در **Telegram** برای شما می‌فرستد.
+Every 5 minutes, Lambda reads unread emails with the `Upwork-Alerts` label from Gmail, extracts and scores them with an LLM, drafts proposals for suitable jobs (🟢 APPLY / 🟡 MAYBE) and sends them straight to **Telegram**.
 
-> **مهم:** ربات هیچ‌وقت خودش روی Upwork اپلای نمی‌کند. ارسال پروپوزال همیشه دستی و توسط شماست.
-> **داده:** متن ایمیل و پروپوزال ذخیره نمی‌شود. وضعیت «پردازش‌شده» فقط برچسب `UNREAD` در Gmail است. کلیدها در SSM Parameter Store (رمزنگاری‌شده) هستند. متن ایمیل به ارائه‌دهنده‌ی LLM فرستاده می‌شود؛ شرایط Gemini / Groq / OpenRouter را بخوانید.
+> **Important:** the bot never applies on Upwork by itself. Submitting a proposal is always manual and done by you.
+> **Data:** email text and proposals are not stored. The only "processed" state is the `UNREAD` label in Gmail. Keys live in SSM Parameter Store (encrypted). Email text is sent to the LLM provider; read the Gemini / Groq / OpenRouter terms.
+
+> **Deploying for someone else?** Hand them [`DEPLOY-AWS.md`](DEPLOY-AWS.md), a self-contained step-by-step guide for the AWS account owner.
 
 ---
 
-## ۰. پیش‌نیازها
+## 0. Prerequisites
 
-| مورد | دلیل | هزینه |
+| Item | Reason | Cost |
 |---|---|---|
-| حساب AWS (با تأیید هویت و کارت) | Lambda، EventBridge Scheduler، SSM، CloudWatch | سطح رایگان؛ تخمین: صفر تا چند سنت در ماه (تأیید نشد: قیمت‌ها را در صفحه‌ی AWS بررسی کنید) |
-| AWS CLI v2 با دسترسی (`aws configure` یا SSO) | ارسال secrets و اجرای دستورها | رایگان |
-| AWS SAM CLI | deploy قالب `infra/template.yaml` | رایگان |
-| Node.js 22 | تست و ساخت بسته (روی Node 22 تست شده) | رایگان |
-| Gmail اختصاصی + برچسب `Upwork-Alerts` | منبع ایمیل‌های جاب | رایگان |
-| Google Cloud + Gmail API + OAuth Desktop | دسترسی Gmail | رایگان (⚠️ تأیید نشد: انقضای Refresh Token در حالت Testing) |
-| BotFather (ربات تلگرام) | ارسال پیام | رایگان |
-| کلید Gemini (Google AI Studio) | LLM اصلی | رایگان (⚠️ تأیید نشد: سهمیه) |
-| کلید Groq یا OpenRouter (اختیاری) | fallback | رایگان (⚠️ تأیید نشد) |
+| AWS account (identity-verified, with a card) | Lambda, EventBridge Scheduler, SSM, CloudWatch | Free tier; estimate: zero to a few cents per month (unconfirmed: check prices on the AWS pages) |
+| AWS CLI v2 with access (`aws configure` or SSO) | Store secrets and run commands | Free |
+| AWS SAM CLI | Deploy the `infra/template.yaml` template | Free |
+| Node.js 22 | Test and build the package (tested on Node 22) | Free |
+| Dedicated Gmail + `Upwork-Alerts` label | Source of job emails | Free |
+| Google Cloud + Gmail API + OAuth Desktop | Gmail access | Free (⚠️ refresh token expires after 7 days while the OAuth app is in "Testing"; see section 1) |
+| BotFather (Telegram bot) | Send messages | Free |
+| Gemini key (Google AI Studio) | Primary LLM | Free (⚠️ unconfirmed: quota) |
+| Groq or OpenRouter key (optional) | Fallback | Free (⚠️ unconfirmed) |
 
-**منطقه‌ی AWS:** چون شما در لندن هستید، `eu-west-2` (London) پیشنهاد می‌شود. این انتخاب شماست؛ در همه‌ی دستورها `--region` را همان بگذارید.
-**قبل از ثبت‌نام:** مطمئن شوید هر سرویس در کشور شما مجاز است و حساب‌ها به نام واقعی‌تان هستند.
+**AWS region:** the examples use `eu-west-2` (London). Any AWS region works; pick the one closest to you and use the same region in every command.
+**Before signing up:** make sure each service is allowed in your country and that all accounts are in your real name.
 
 ---
 
-## ۱. Gmail و Gmail API (یک‌بار)
+## 1. Gmail and the Gmail API (once)
 
-1. برچسب `Upwork-Alerts` و فیلتر را در Gmail بسازید (ایمیل‌های Upwork را برچسب بزنید).
-2. در Google Cloud یک پروژه بسازید، **Gmail API** را فعال کنید.
-3. **OAuth consent screen**: External؛ آدرس Gmail خودتان را Test user کنید.
-4. **OAuth client ID** از نوع **Desktop app** بسازید. Client ID و Client secret را نگه دارید.
-5. Refresh Token را روی سیستم خودتان بگیرید:
+1. Create the `Upwork-Alerts` label and a filter in Gmail (label Upwork emails).
+2. Create a project in Google Cloud and enable the **Gmail API**.
+3. **OAuth consent screen**: External; add your own Gmail address as a Test user.
+4. Create an **OAuth client ID** of type **Desktop app**. Keep the Client ID and Client secret.
+5. Get a Refresh Token on your own machine:
 
 ```bash
 cd bot
 GMAIL_CLIENT_ID='...' GMAIL_CLIENT_SECRET='...' npm run token
 ```
-مرورگر باز می‌شود؛ با Gmail اختصاصی وارد شوید و دسترسی `gmail.modify` بدهید. Refresh Token در ترمینال چاپ می‌شود.
+
+A browser opens; sign in with the dedicated Gmail account and grant `gmail.modify`. The Refresh Token is printed in the terminal.
+
+> ⚠️ **Refresh-token lifetime:** while the OAuth consent screen's publishing status is **Testing**, Google issues refresh tokens that **expire after 7 days**, and Gmail scopes are not exempt. Either (a) switch the publishing status to **In production** after creating the token, or (b) repeat `npm run token` every 7 days. Publishing an app with restricted Gmail scopes may require Google verification; for single-user use the unverified-app warning is usually acceptable. See [Google's OAuth documentation](https://developers.google.com/identity/protocols/oauth2).
 
 ---
 
-## ۲. ربات تلگرام و شناسه‌ی چت شما
+## 2. Telegram bot and your chat ID
 
-1. در **@BotFather** با `/newbot` ربات بسازید. **توکن** را نگه دارید (فرمت `123456:ABC...`). این توکن عادی ربات است، نه توکن CLI.
-2. یک‌بار به ربات خود `/start` بفرستید.
-3. در مرورگر این آدرس را باز کنید (`<TOKEN>` را با توکن خودتان بگذارید):
+1. In **@BotFather**, create a bot with `/newbot`. Keep the **token** (format `123456:ABC...`). This is the normal bot token, not a CLI token.
+2. Send `/start` to your bot once.
+3. Open this URL in a browser (replace `<TOKEN>` with your token):
    `https://api.telegram.org/bot<TOKEN>/getUpdates`
-   در JSON خروجی، مقدار `"chat":{"id": ...}` را پیدا کنید. آن عدد **OWNER_TG_ID** شماست.
+   In the JSON output, find the `"chat":{"id": ...}` value. That number is your **OWNER_TG_ID**.
 
-> اگر webhook فعال باشد `getUpdates` خالی است؛ ربات جدید معمولاً فعال نیست.
+> If a webhook is enabled, `getUpdates` returns nothing; a new bot normally has no webhook.
 
 ---
 
-## ۳. نصب، تست و ساخت بسته
+## 3. Install, test and build
 
 ```bash
 cd upwork-intelligence/bot
 npm install
-npm test          # ۳۱ تست؛ باید همه pass شوند
-npm run build     # ساخت build/pkg (کد و lib؛ بدون وابستگی npm)
+npm test          # 31 tests; all must pass
+npm run build     # creates build/pkg (code and lib; no npm dependencies)
 ```
 
 ---
 
-## ۴. ذخیره‌ی secrets در SSM (یک‌بار، با ورودی پنهان)
+## 4. Store secrets in SSM (once, with hidden input)
 
-با AWS CLI احراز هویت شوید و منطقه را مشخص کنید:
+Authenticate the AWS CLI and choose the region:
 ```bash
 export AWS_REGION=eu-west-2
-aws sts get-caller-identity     # باید حساب شما را نشان دهد
+aws sts get-caller-identity     # must show your account
 ```
 
-هر secret را جداگانه بدهید (مقدار پنهان تایپ می‌شود و در تاریخچه‌ی shell نمی‌ماند):
+Provide each secret separately (the value is typed hidden and does not stay in shell history):
 ```bash
 npm run secret -- TELEGRAM_BOT_TOKEN
 npm run secret -- OWNER_TG_ID
@@ -81,105 +86,112 @@ npm run secret -- GMAIL_CLIENT_ID
 npm run secret -- GMAIL_CLIENT_SECRET
 npm run secret -- GMAIL_REFRESH_TOKEN
 npm run secret -- GEMINI_API_KEY
-# اختیاری:
+# Optional:
 npm run secret -- GROQ_API_KEY
 npm run secret -- OPENROUTER_API_KEY
-npm run secret -- GMAIL_QUERY           # اگر نام برچسب فرق دارد: label:"نام" is:unread
-npm run secret -- GEMINI_MODEL          # اگر مدل دیگری می‌خواهید
+npm run secret -- GMAIL_QUERY           # if the label name differs: label:"name" is:unread
+npm run secret -- GEMINI_MODEL          # if you want a different model
 ```
-همه‌ی نام‌های مجاز در `src/lib/config.js` است.
 
-> ریسک: این مقادیر در SSM به‌صورت SecureString هستند؛ Lambda به‌صورت پیش‌فرض آن‌ها را از SSM می‌خواند و در متغیر محیطی نمی‌گذارد.
+All allowed names are in `src/lib/config.js`.
 
----
-
-## ۵. پروفایل خودتان (ضروری)
-
-فایل `src/lib/profile.js` را باز کنید و همه‌ی `[TODO]` را با واقعیت‌های خودتان پر کنید: مهارت‌ها، حداقل نرخ‌ها، کشورهای مسدود (اختیاری)، و نتایج قابل اثبات. تا وقتی `[TODO]` باقی است، هیچ پیامی ارسال نمی‌شود و خطا در لاگ ثبت می‌شود.
+> Security note: these values are SecureString parameters in SSM; Lambda reads them from SSM at runtime and they are not placed in environment variables.
 
 ---
 
-## ۶. Deploy
+## 5. Your profile (required)
+
+Open `src/lib/profile.js` and replace every `[TODO]` with your own facts: skills, minimum rates, blocked countries (optional) and provable results. While any `[TODO]` remains, nothing is sent and an error is logged.
+
+---
+
+## 6. Deploy
 
 ```bash
 npm run build
+sam build --template-file infra/template.yaml
 sam deploy \
-  --template-file infra/template.yaml \
+  --template-file .aws-sam/build/template.yaml \
   --stack-name upwork-agent \
   --capabilities CAPABILITY_IAM \
   --resolve-s3 \
   --region eu-west-2
 ```
 
-بار اول می‌تواند چند دقیقه طول بکشد. بعد از تغییر کد یا پروفایل، همان دستورها را دوباره بزنید.
+The first deployment can take a few minutes. After changing code or the profile, run the same commands again.
+
+> `sam deploy --guided` is an interactive alternative; it asks for the stack name, region and parameter values.
 
 ---
 
-## ۷. بررسی اجرا
+## 7. Verify the run
 
-اجرای دستی یک‌بار (بدون انتظار ۵ دقیقه):
+Invoke once manually (without waiting 5 minutes):
 ```bash
 aws lambda invoke --function-name upwork-agent --region eu-west-2 out.json && cat out.json
 aws logs tail /aws/lambda/upwork-agent --follow --region eu-west-2
 ```
-اگر جاب مناسبی باشد، پیام در تلگرام می‌آید. پیش‌نویس را بازبینی کنید، `placeholder` ها را پر کنید و **خودتان** در Upwork ارسال کنید.
+
+If there is a suitable job, a message arrives in Telegram. Review the draft, fill in the `placeholder`s and **submit it yourself** on Upwork.
 
 ---
 
-## ۸. توقف و حذف
+## 8. Pause and removal
 
-- **توقف موقت:** در کنسول AWS → **EventBridge → Scheduler** برنامه‌ی زمان‌بندی تابع را Disable کنید.
-- **حذف کامل:** `aws cloudformation delete-stack --stack-name upwork-agent --region eu-west-2` (و secrets را از SSM پاک کنید: `aws ssm delete-parameters --names ...`).
+- **Pause temporarily:** in the AWS console → **EventBridge → Scheduler**, disable the schedule that targets the function.
+- **Remove completely:** `aws cloudformation delete-stack --stack-name upwork-agent --region eu-west-2` (and delete the secrets from SSM: `aws ssm delete-parameters --names ...`).
 
 ---
 
-## ۹. خطایابی
+## 9. Troubleshooting
 
-| پیام در لاگ / تلگرام | معنی | کار |
+| Log / Telegram message | Meaning | Action |
 |---|---|---|
-| `Could not load credentials` | AWS CLI یا دسترسی نیست | `aws configure` یا SSO |
-| `تنظیمات ناقص است: …` | secret نیست | بخش ۴ |
-| `lib/profile.js هنوز کامل نشده` | `[TODO]` باقی است | بخش ۵ |
-| `⚠️ اجرای خودکار ناموفق` (تلگرام) | خطای کل اجرا، مثلاً توکن Gmail باطل | لاگ را ببینید؛ secret را به‌روز کنید |
-| `transient failure, will retry next run` (لاگ) | LLM یا Gmail موقتاً خطا داده؛ ایمیل UNREAD مانده | معمولاً خودش حل می‌شود؛ اگر تکرار شد، سهمیه و کلید را بررسی کنید |
-| `⚠️ یک ایمیل پردازش نشد` (تلگرام) | ایمیل مشکل ساختاری دارد (مثلاً لینک جاب ندارد)؛ خوانده‌شده شد | بررسی دستی در Gmail |
-| `invalid_grant` در Gmail | Refresh Token منقضی یا ابطال شده | بخش ۱ را تکرار کنید و `GMAIL_REFRESH_TOKEN` را عوض کنید |
+| `Could not load credentials` | No AWS CLI credentials or permission | `aws configure` or SSO |
+| `Incomplete configuration: …` | A secret is missing | Section 4 |
+| `lib/profile.js is not complete yet` | A `[TODO]` remains | Section 5 |
+| `⚠️ Scheduled run failed` (Telegram) | A whole-run error, e.g. an invalid Gmail token | Check the logs; update the secret |
+| `transient failure, will retry next run` (log) | A temporary LLM or Gmail error; the email stays UNREAD | Usually resolves itself; if it repeats, check the quota and key |
+| `⚠️ One email could not be processed` (Telegram) | The email is structurally broken (e.g. no job link); it is marked read | Check it manually in Gmail |
+| `invalid_grant` in Gmail | Refresh Token expired or was revoked | Repeat section 1 and update `GMAIL_REFRESH_TOKEN` |
 
 ---
 
-## ۱۰. یادداشت‌های فنی و محدودیت‌ها
+## 10. Technical notes and limitations
 
-- **زمان‌بندی:** هر ۵ دقیقه (`rate(5 minutes)`). `ReservedConcurrentExecutions: 1` یعنی اجراها هم‌زمان نمی‌شوند.
-- **ظرفیت:** هر اجرا حداکثر `MAX_PER_RUN` (پیش‌فرض ۵) ایمیل را پردازش می‌کند. بقیه در اجرای بعدی می‌آیند.
-- **تکرار:** اگر پیام تلگرام رفت ولی حذف `UNREAD` ناموفق بود، همان ایمیل ممکن است دوباره ارسال شود. این ریسک پذیرفته شده است.
-- **Retry خودکار AWS غیرفعال است** (`MaximumRetryAttempts: 0`). ایمیل‌های ناموفق در اجرای بعدی خودشان دوباره بررسی می‌شوند.
-- **سقف زمان اجرا:** Lambda حداکثر ۹۰۰ ثانیه مجاز دارد؛ ما ۳۰۰ ثانیه تنظیم کرده‌ایم. اگر LLM کند شد، `Timeout` را در `infra/template.yaml` بالا ببرید.
-- **Telegram Serverless:** دیگر استفاده نمی‌شود (زمان‌بند ندارد). کد قدیمی آن در تاریخچه‌ی Git است.
-- **مدل‌ها و سهمیه‌ها:** نام مدل‌ها و سهمیه‌های free tier تغییر می‌کنند؛ قبل از استفاده در صفحه‌ی رسمی همان سرویس بررسی کنید.
+- **Scheduling:** every 5 minutes (`rate(5 minutes)`). `ReservedConcurrentExecutions: 1` means runs never overlap.
+- **Capacity:** each run processes at most `MAX_PER_RUN` emails (default 5). The rest wait for the next run.
+- **Duplicates:** if the Telegram message was sent but removing `UNREAD` failed, the same email may be sent again. This risk is accepted.
+- **AWS automatic retries are disabled** (`MaximumRetryAttempts: 0`). Failed emails are checked again on the next run.
+- **Execution time limit:** Lambda allows at most 900 seconds; we use 300. If the LLM is slow, raise `Timeout` in `infra/template.yaml`.
+- **Telegram Serverless:** no longer used (it has no scheduler). Its old code remains in the Git history.
+- **Models and quotas:** free-tier model names and quotas change; check the official page of each service before relying on them.
+- **Secrets cache:** a warm Lambda container caches SSM values. After changing a secret, the new value applies on the next cold start (or force one by redeploying).
 
-## ۱۱. نقشه‌ی فایل‌ها
+## 11. File map
 
 ```
 bot/
 ├─ src/
-│  ├─ lambda.mjs          ← نقطه‌ی ورود Lambda (SSM + Telegram)
-│  ├─ package.json         ← type: module (برای runtime)
+│  ├─ lambda.mjs          ← Lambda entry point (SSM + Telegram)
+│  ├─ package.json         ← type: module (for the runtime)
 │  └─ lib/
-│     ├─ pipeline.js       ← جریان اصلی هر اجرا
-│     ├─ gmail.js          ← Gmail API با fetch
+│     ├─ pipeline.js       ← main flow of each run
+│     ├─ gmail.js          ← Gmail API via fetch
 │     ├─ llm.js            ← Gemini → Groq → OpenRouter
 │     ├─ prompts.js        ← extract.v1 / score.v1 / proposal_writer.v1
-│     ├─ validate.js       ← اعتبارسنجی JSON خروجی LLM
-│     ├─ score.js          ← Hard gates G1–G7 و امتیاز وزنی
-│     ├─ clean.js          ← پاک‌سازی متن ایمیل
-│     ├─ format.js         ← قالب پیام تلگرام
-│     ├─ profile.js        ← پروفایل شما (تنها منبع حقایق)
-│     └─ config.js         ← خواندن secrets و پیش‌فرض‌ها
-├─ infra/template.yaml     ← SAM: Lambda + زمان‌بند ۵ دقیقه + IAM + لاگ
+│     ├─ validate.js       ← validation of LLM JSON output
+│     ├─ score.js          ← hard gates G1–G7 and weighted score
+│     ├─ clean.js          ← email text cleaning
+│     ├─ format.js         ← Telegram message templates
+│     ├─ profile.js        ← your profile (the only source of facts)
+│     └─ config.js         ← secret loading and defaults
+├─ infra/template.yaml     ← SAM: Lambda + 5-minute schedule + IAM + logs
 ├─ scripts/
-│  ├─ build.sh             ← ساخت build/pkg
-│  ├─ put-secret.mjs       ← ذخیره‌ی secret در SSM (ورودی پنهان)
-│  └─ get-refresh-token.mjs← گرفتن Refresh Token Gmail
+│  ├─ build.sh             ← creates build/pkg
+│  ├─ put-secret.mjs       ← store a secret in SSM (hidden input)
+│  └─ get-refresh-token.mjs← obtain a Gmail Refresh Token
 ├─ test/                   ← npm test
+├─ DEPLOY-AWS.md           ← guide for the AWS account owner
 └─ package.json
 ```

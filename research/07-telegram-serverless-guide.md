@@ -1,50 +1,51 @@
-# ۰۷ — راهنمای یادگیری ابزارهای پروژه (نسخه‌ی Option B)
+# 07 — Learning guide for the project's tools (Option B)
 
-> **وضعیت:** این فایل به‌روز شد. راهنمای Telegram Serverless دیگر مسیر پیاده‌سازی نیست. این نسخه ابزارهای فعلی را توضیح می‌دهد. نام فایل برای سازگاری با لینک‌های قبلی حفظ شده است.
-> **قاعده‌ی سطح اطمینان:** موارد «تأیید نشد» را قبل از استفاده بررسی کنید.
+> **Status:** this file has been updated. The Telegram Serverless guide is no longer the implementation path. This version explains the tools actually used. The file name is kept for compatibility with earlier links.
+> **Confidence rule:** check anything marked "unconfirmed" before using it.
 
-## ۱. مفاهیم کلیدی
+## 1. Key concepts
 
-| مفهوم | توضیح ساده | در این پروژه |
+| Concept | Simple explanation | In this project |
 |---|---|---|
-| **Serverless / Lambda** | کد را بدون سرور دائم اجرا می‌کنید؛ AWS فقط وقت اجرا را می‌گیرد | تابع `upwork-agent` |
-| **Trigger / Scheduler** | چیزی که اجرا را شروع می‌کند | EventBridge Scheduler، هر ۵ دقیقه |
-| **IAM** | تعیین اینکه تابع چه کارهایی مجاز است | فقط خواندن SSM و Decrypt |
-| **SSM Parameter Store** | جای امن نگه‌داری تنظیمات و کلیدها | SecureString با پیشوند `/upwork-agent/` |
-| **SAM / CloudFormation** | قالب YAML که کل زیرساخت را توصیف می‌کند | `bot/infra/template.yaml` |
-| **OAuth2 Refresh Token** | اجازه‌ی بلندمدت برای خواندن Gmail | `GMAIL_REFRESH_TOKEN` |
-| **Gmail label و UNREAD** | وضعیت «پردازش‌نشده» بدون دیتابیس | برچسب `Upwork-Alerts` و `is:unread` |
-| **LLM و fallback** | مدل زبانی؛ اگر یکی خطا داد، بعدی | Gemini → Groq → OpenRouter |
-| **Schema / JSON validation** | تضمین ساختار خروجی مدل | `src/lib/validate.js` |
-| **Hard gates و امتیاز وزنی** | قوانین قطعی قبل از امتیازدهی | `src/lib/score.js` (G1–G7) |
-| **Idempotency** | اجرای دوباره نتیجه‌ی تکراری ندهد | فقط با UNREAD؛ ریسک تکرار در بخش ۰۵ |
+| **Serverless / Lambda** | Run code without a permanent server; AWS charges only for execution time | The `upwork-agent` function |
+| **Trigger / Scheduler** | What starts a run | EventBridge Scheduler, every 5 minutes |
+| **IAM** | Defines what the function is allowed to do | Read SSM and Decrypt only |
+| **SSM Parameter Store** | A safe place for settings and keys | SecureString with the `/upwork-agent/` prefix |
+| **SAM / CloudFormation** | A YAML template that describes the whole infrastructure | `bot/infra/template.yaml` |
+| **OAuth2 Refresh Token** | Long-lived permission to read Gmail | `GMAIL_REFRESH_TOKEN` |
+| **Gmail label and UNREAD** | The "not processed" state without a database | `Upwork-Alerts` label and `is:unread` |
+| **LLM and fallback** | A language model; if one fails, the next one is used | Gemini → Groq → OpenRouter |
+| **Schema / JSON validation** | Guarantees the model's output structure | `src/lib/validate.js` |
+| **Hard gates and weighted score** | Deterministic rules before scoring | `src/lib/score.js` (G1–G7) |
+| **Idempotency** | A repeated run should not produce a duplicate result | Only via UNREAD; the duplicate risk is described in `05` |
 
-## ۲. ابزارهای عملی
+## 2. Practical tools
 
 ```bash
-# نصب و تست
+# Install and test
 cd bot && npm install && npm test
 
-# ساخت بسته و deploy
+# Build, then build and deploy the SAM package
 npm run build
-sam deploy --template-file infra/template.yaml --stack-name upwork-agent \
+sam build --template-file infra/template.yaml
+sam deploy --template-file .aws-sam/build/template.yaml --stack-name upwork-agent \
   --capabilities CAPABILITY_IAM --resolve-s3 --region eu-west-2
 
-# مشاهده‌ی لاگ
+# Watch the logs
 aws logs tail /aws/lambda/upwork-agent --follow --region eu-west-2
 ```
 
-## ۳. مسیر یادگیری پیشنهادی
+## 3. Suggested learning path
 
-1. **JSON و HTTP:** خواندن یک پاسخ `fetch` و ساختار JSON.
-2. **Gmail API:** `messages.list` با `q=`، سپس `messages.get`، سپس `messages.modify`.
-3. **OAuth:** چرا Refresh Token لازم است و Access Token کوتاه‌عمر است.
-4. **Lambda:** handler، timeout، لاگ، و تفاوت تابع با سرور.
-5. **EventBridge Scheduler:** `rate(5 minutes)` و تفاوت با cron.
-6. **LLM:** توکن، context window، structured output، و fallback.
+1. **JSON and HTTP:** reading a `fetch` response and JSON structure.
+2. **Gmail API:** `messages.list` with `q=`, then `messages.get`, then `messages.modify`.
+3. **OAuth:** why a Refresh Token is needed and the Access Token is short-lived.
+4. **Lambda:** handler, timeout, logs, and the difference between a function and a server.
+5. **EventBridge Scheduler:** `rate(5 minutes)` and how it differs from cron.
+6. **LLM:** tokens, context window, structured output and fallback.
 
-## ۴. منابع
+## 4. Sources
 
-- مستندات رسمی AWS Lambda، EventBridge Scheduler، SSM، SAM.
-- مستندات رسمی Gmail API.
-- Telegram Bot API `sendMessage` (مستندات رسمی را تأیید کنید).
+- Official AWS Lambda, EventBridge Scheduler, SSM and SAM documentation.
+- Official Gmail API documentation.
+- Telegram Bot API `sendMessage` (verify against the official docs).

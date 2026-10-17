@@ -1,4 +1,4 @@
-// پاک‌سازی متن ایمیل قبل از ارسال به LLM. هیچ‌جا ذخیره نمی‌شود.
+// Clean email text before sending it to the LLM. It is never stored.
 
 export const MAX_EMAIL_CHARS = 12000;
 
@@ -24,12 +24,12 @@ export function htmlToText(html) {
   return decodeEntities(stripped);
 }
 
-// خطوط پاورقی/لغو اشتراک که به درد استخراج نمی‌خورند
+// Footer/unsubscribe lines that are useless for extraction
 const FOOTER = /(unsubscribe|manage (your )?(email|notification|preferences)|you('| a)re receiving|privacy policy|all rights reserved|©|view in browser|this email was sent)/i;
 
 export function cleanEmail(raw, isHtml) {
   let text = isHtml ? htmlToText(raw) : raw;
-  // لینک‌های بسیار بلند (معمولاً tracking) حذف می‌شوند
+  // Very long links (usually tracking) are removed
   text = text.replace(/https?:\/\/\S{200,}/g, '[long-link]');
 
   const lines = text
@@ -53,7 +53,7 @@ export function cleanEmail(raw, isHtml) {
   return res;
 }
 
-// لینک جاب را قطعی از متن پیدا می‌کنیم (نه از خروجی LLM) تا حدس زده نشود
+// Find the job link directly in the text (not in LLM output) so it is never guessed
 export function findJobUrl(text) {
   const m = text.match(/https:\/\/www\.upwork\.com\/(?:jobs|nx\/find-work)\/[^\s"'<>\])]+/i);
   return m ? m[0].replace(/[.,;:]+$/, '') : null;

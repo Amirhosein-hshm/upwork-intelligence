@@ -1,4 +1,4 @@
-// تست end-to-end جریان /check با fetch و LLM ساختگی (بدون شبکه).
+// End-to-end test of the run flow with a stubbed fetch and LLM (no network).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runCheck } from '../src/lib/pipeline.js';
@@ -66,7 +66,7 @@ const EXTRACT_JOB = {
   extraction_notes: [],
 };
 
-const SCORE_OK = { skill_match: 90, scope_clarity: 85, question_fit: 80, red_flags: [], summary_fa: 'مناسب است.', missing_info: [] };
+const SCORE_OK = { skill_match: 90, scope_clarity: 85, question_fit: 80, red_flags: [], summary_en: 'Good fit.', missing_info: [] };
 const PROPOSAL_OK = {
   proposal_text: 'Charts and CSV export are a good first milestone. I would start with the data model.\n\nI cut page load by 40% on a React app.\n\nWhich chart types matter most?',
   first_sentence_reference: 'charts and CSV export',
@@ -77,7 +77,7 @@ const PROPOSAL_OK = {
   do_not_apply_recommended: false,
 };
 
-// fetch ساختگی: Gmail + Gemini با پاسخ بر اساس محتوای prompt
+// Stub fetch: Gmail + Gemini, replying based on the prompt content
 function makeFetch({ mails, extractReply, failGemini = false }) {
   const calls = [];
   const fetch = async (url, opts = {}) => {
@@ -118,7 +118,7 @@ test('job alert → one job message sent, then email marked read', async () => {
   assert.equal(stats.failed, 0);
   assert.ok(sent.some((t) => t.includes('React dashboard for SaaS analytics')));
   assert.ok(sent.some((t) => t.includes('<pre>')));
-  // ترتیب: ارسال قبل از حذف UNREAD
+  // Order: send before removing UNREAD
   const modifyIdx = calls.findIndex((c) => c.url.includes('/modify'));
   assert.ok(modifyIdx > -1);
   assert.deepEqual(JSON.parse(modifyCalls(calls)[0].body), { removeLabelIds: ['UNREAD'] });
@@ -132,7 +132,7 @@ test('non-job email (invitation) → info message, still marked read', async () 
   const sent = [];
   const stats = await runCheck({ fetch, getSecret, send: async (t) => sent.push(t), profile: READY_PROFILE });
   assert.equal(stats.not_job, 1);
-  assert.ok(sent.some((t) => t.includes('جاب نبود')));
+  assert.ok(sent.some((t) => t.includes('was not a job')));
   assert.equal(modifyCalls(calls).length, 1);
 });
 
@@ -144,7 +144,7 @@ test('LLM failure → error message, email stays UNREAD (no modify)', async () =
   assert.equal(stats.failed, 1);
   assert.equal(stats.permanent_failed, 0);
   assert.equal(stats.job_sent, 0);
-  // خطای موقت: هیچ پیامی به تلگرام نمی‌رود و ایمیل UNREAD می‌ماند
+  // Transient error: nothing is sent to Telegram and the email stays UNREAD
   assert.equal(sent.length, 0);
   assert.equal(modifyCalls(calls).length, 0);
 });
@@ -181,15 +181,15 @@ test('permanent content error (no job link) → one notice, marked read', async 
   assert.equal(stats.permanent_failed, 1);
   assert.equal(stats.failed, 0);
   assert.equal(sent.length, 1);
-  assert.ok(sent[0].includes('پردازش نشد'));
+  assert.ok(sent[0].includes('could not be processed'));
   assert.equal(modifyCalls(calls).length, 1);
 });
 
 test('profile with [TODO] refuses to run', async () => {
   const { fetch } = makeFetch({ mails: [], extractReply: EXTRACT_JOB });
   await assert.rejects(
-    runCheck({ fetch, getSecret, send: async () => {} }), // پیش‌فرض: PROFILE با [TODO]
-    /هنوز کامل نشده/
+    runCheck({ fetch, getSecret, send: async () => {} }), // Default: PROFILE still contains [TODO]
+    /not complete yet/
   );
 });
 
@@ -202,6 +202,6 @@ test('missing secrets gives a ConfigError listing names', async () => {
 });
 
 test('decodeBase64Url handles UTF-8 and url-safe characters', () => {
-  const s = 'Persian: سلام — ✓';
+  const s = 'Unicode: café — ✓';
   assert.equal(decodeBase64Url(b64(s)), s);
 });

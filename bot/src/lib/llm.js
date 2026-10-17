@@ -1,11 +1,11 @@
-// LLM client با fetch و fallback: Gemini → Groq → OpenRouter.
-// هر provider یک بار تلاش می‌کند؛ خطا یا JSON نامعتبر → provider بعدی.
+// LLM client built on fetch, with fallback: Gemini -> Groq -> OpenRouter.
+// Each provider is tried once; an error or invalid JSON moves on to the next provider.
 
 export function parseJsonLoose(raw) {
   const cleaned = String(raw).replace(/```(?:json)?/gi, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
-  if (start === -1 || end <= start) throw new Error('JSON در پاسخ نبود');
+  if (start === -1 || end <= start) throw new Error('No JSON found in the response');
   return JSON.parse(cleaned.slice(start, end + 1));
 }
 
@@ -71,5 +71,5 @@ export async function callJson({ fetch, providers, system, user }) {
       errors.push(`${p.name}: ${err.message}`);
     }
   }
-  throw new Error(`همه‌ی LLMها ناموفق بودند (${errors.join(' | ')})`);
+  throw new Error(`All LLM providers failed (${errors.join(' | ')})`);
 }

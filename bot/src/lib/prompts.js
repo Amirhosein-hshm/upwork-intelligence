@@ -1,4 +1,4 @@
-// Prompts منتقل‌شده از research/02 و research/03 (نسخه‌های extract.v1، score.v1، proposal_writer.v1).
+// Prompts carried over from research/02 and research/03 (extract.v1, score.v1, proposal_writer.v1).
 
 export const EXTRACT_SYSTEM = `ROLE
 You extract structured data from ONE Upwork notification email. You do not judge the job.
@@ -44,7 +44,7 @@ OUTPUT JSON ONLY:
   "scope_clarity": 0-100,
   "question_fit": 0-100 (100 = screening questions are answerable with the profile, none need extra work),
   "red_flags": [ { "code": string, "evidence_quote": string, "confidence": "high" | "medium" | "low" } ],
-  "summary_fa": string (Persian, at most 3 short sentences: what the job is, why it fits or not, the main risk),
+  "summary_en": string (English, at most 3 short sentences: what the job is, why it fits or not, the main risk),
   "missing_info": string[] (max 3 questions the freelancer should answer before applying)
 }
 Allowed red_flag codes: vague_scope, budget_mismatch, too_many_proposals, client_no_history, pay_low_effort_high_scope, ask_for_free_work, urgent_pressure_no_detail, off_platform_contact, unusual_payment_request.

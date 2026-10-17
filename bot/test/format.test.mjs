@@ -19,7 +19,7 @@ const job = {
   posted_at: null,
   screening_questions: [],
 };
-const llm = validateScore({ skill_match: 90, scope_clarity: 80, question_fit: 80, red_flags: [], summary_fa: 'خلاصه', missing_info: ['Q1?'] });
+const llm = validateScore({ skill_match: 90, scope_clarity: 80, question_fit: 80, red_flags: [], summary_en: 'Strong fit', missing_info: ['Q1?'] });
 const ev = evaluateJob({ job, llm, rates: { hourly_min_usd: 30, fixed_min_usd: 300 }, prefs: { blocked_client_countries: [], excluded_keywords: [] }, now: Date.now() });
 
 test('escapes HTML special characters', () => {
@@ -50,6 +50,6 @@ test('formatJobMessage: every message within Telegram limit, proposal in <pre>, 
   assert.ok(msgs.every((m) => m.length <= TELEGRAM_LIMIT), 'limit');
   assert.ok(msgs[0].includes('API &amp; &lt;Webhook&gt; work'));
   assert.ok(msgs.join('\n').includes('<pre>'));
-  assert.ok(msgs[0].includes('placeholder'));
+  assert.ok(msgs[0].includes('Placeholder'));
   assert.ok(msgs[0].includes('APPLY') || msgs[0].includes('MAYBE'));
 });

@@ -4,3 +4,5 @@ node_modules/
 *.secret
 *.refresh-token
 build/
+# SAM build output
+.aws-sam/

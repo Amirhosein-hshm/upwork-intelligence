@@ -1,171 +1,171 @@
-# ۰۱ — یافته‌های تحقیق Upwork (بخش A و B)
+# 01 — Upwork research findings (Parts A and B)
 
-- تاریخ تحقیق: ۲۰۲۶-۱۰-۱۵
-- برچسب سطح اطمینان:
-  - **[رسمی]**: از صفحه‌ی رسمی Upwork / مستندات رسمی خوانده شده (بیشترین اعتبار)
-  - **[چند منبع]**: در چند منبع مستقل تکرار شده، اما منبع رسمی مستقیم خوانده نشده
-  - **[منبع واحد]**: فقط یک منبع ثالث (SEO/وبلاگ فروشندگان ابزار) و باید قبل از تکیه کردن تأیید شود
-  - **[تأیید نشد]**: نتوانستم تأیید کنم
-- منابع ثالث فروشندگان ابزار (GigRadar، aiproposer و …) اغلب **منافع تجاری** دارند و با هم اختلاف دارند. آن‌ها را فقط به‌عنوان «نظر جامعه/تجربه» در نظر بگیرید، نه واقعیت.
+- Research date: 2026-10-15
+- Confidence labels:
+  - **[Official]**: read on an official Upwork page / official documentation (highest credibility)
+  - **[Multiple sources]**: repeated in several independent sources, but no direct official source was read
+  - **[Single source]**: only one third-party source (SEO/vendor blog); must be verified before relying on it
+  - **[Unconfirmed]**: could not verify
+- Third-party vendor sources (GigRadar, aiproposer, etc.) often have **commercial interests** and disagree with each other. Treat them as "community opinion/experience", not fact.
 
 ---
 
-## ⛔ یافته‌ی حیاتی: وضعیت حقوقی ثبت‌نام (محدودیت کشور)
+## ⛔ Critical finding: registration legality (country restriction)
 
-| موضوع | یافته | منبع | سطح |
+| Topic | Finding | Source | Level |
 |---|---|---|---|
-| Eligibility | Upwork صریحاً می‌گوید: «Businesses or individuals in the following regions and countries are not permitted to register for accounts or utilize our platform: **Iran**» و «Any other country or region restricted by law». دلیل: قوانین ایالات متحده (OFAC). | [Who's eligible to join and use Upwork?](https://support.upwork.com/hc/en-us/articles/211067778-Who-s-eligible-to-join-and-use-Upwork) | **[رسمی]** |
-| Upwork API | دسترسی به API (OAuth و کلید) هم برای کاربران مقیم کشورهای محدودشده منطقی نیست؛ این استنتاجی از همان بخش Eligibility است. | همان صفحه | استنتاج |
-| دور زدن | گزارش‌های کاربران Reddit نشان می‌دهد برخی افراد با ساخت اکانت از طریق شخص ثالث یا VPN تلاش کرده‌اند و بن دائمی شده‌اند؛ Upwork هم ثبت مجدد با ID را شناسایی می‌کند. | Reddit r/Upwork (چند ترد، ۲۰۲۴–۲۰۲۵) | [منبع واحد / تجربه کاربران] |
+| Eligibility | Upwork states explicitly: "Businesses or individuals in the following regions and countries are not permitted to register for accounts or utilize our platform: **Iran**" and "Any other country or region restricted by law". Reason: United States law (OFAC). | [Who's eligible to join and use Upwork?](https://support.upwork.com/hc/en-us/articles/211067778-Who-s-eligible-to-join-and-use-Upwork) | **[Official]** |
+| Upwork API | API access (OAuth and key) also makes no sense for users resident in restricted countries; this is an inference from the same Eligibility section. | Same page | Inference |
+| Circumvention | Reddit user reports show some people have tried creating accounts through a third party or VPN and were permanently banned; Upwork also detects re-registration by ID. | Reddit r/Upwork (several threads, 2024–2025) | [Single source / user experience] |
 
-**وضعیت کاربر (اعلام ۲۰۲۶-۱۰-۱۶):** کاربر اعلام کرده که **خارج از ایران** است و محدودیت ندارد. بر اساس همین، این پروژه روی فرض «حساب و آدرس واقعی کاربر در کشوری مجاز» ادامه می‌یابد. **این تأیید فقط بر عهده‌ی کاربر است** (فایل `00`، سؤال ۱): Upwork از کشور محل ثبت حساب و آدرس واقعی ملاک می‌گیرد، نه محل سرور یا VPN.
+**User status (statement of 2026-10-16):** the user has stated that they are **outside Iran** and have no restriction. On that basis this project proceeds on the assumption of "a real user account and address in an allowed country". **Only the user can confirm this** (file `00`, question 1): Upwork judges by the country where the account is registered and the real address, not by server location or VPN.
 
-**نتیجه‌گیری عملی:** Upwork برای کسی که مقیم ایران است قابل استفاده‌ی قانونی نیست. برای کاربر خارج از ایران، شرط اصلی این است که حساب به نام واقعی و با آدرس واقعی ساخته شده باشد. هیچ راهکار «دور زدن» (اکانت شخص ثالث، VPN برای ثبت‌نام، آدرس دیگر) پیشنهاد نمی‌شود؛ این کار شرایط Upwork را نقض می‌کند و منجر به بن می‌شود.
+**Practical conclusion:** Upwork cannot legally be used by someone resident in Iran. For a user outside Iran, the main condition is that the account was created in their real name and real address. No "workaround" (third-party account, VPN for registration, another address) is recommended; it violates Upwork's terms and leads to a ban.
 
 ---
 
-## بخش A — اپلای کردن روی Upwork در ۲۰۲۶
+## Part A — Applying on Upwork in 2026
 
-### A1. ساختار فرایند اپلای
-| یافته | منبع | سطح |
+### A1. Structure of the application process
+| Finding | Source | Level |
 |---|---|---|
-| فیلدهای فرم پروپوزال شامل Cover Letter، نرخ/بودجه، Milestones، پاسخ به سوالات کارفرما، Attachments و … است؛ مستندات API نشان می‌دهد پروپوزال شیء `VendorProposal` با `coverLetter`، `terms` (شامل Milestones/Rate)، `attachments`، `projectPlan` و `annotations` است. | [API Documentation (Upwork GraphQL)](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[رسمی]** |
-| `createJobProposal` (Mutation) در مستندات رسمی با توضیح «Create a new proposal using the new flow» و مجوز «Submit Proposal» وجود دارد. | همان صفحه | **[رسمی]** |
-| تغییرات UI در ۲۰۲۵–۲۰۲۶: Uma (دستیار AI) برای ساخت پیش‌نویس پروپوزال (اعلام Upwork از اکتبر ۲۰۲۴ و به‌روزرسانی Spring 2026). | [Fast Company](https://www.fastcompany.com/91210506/upwork-unveils-new-capabilities-for-its-uma-ai-platform) (۲۰۲۴)؛ [Being Guru](https://beingguru.com/upworks-new-ai-agent-uma-what-it-means-for-freelancers-in-2026/) (۲۰۲۶) | [چند منبع] |
-| جزئیات دقیق UI فعلی فرم اپلای (ترتیب فیلدها، Boost، Specialized Profile) | تأیید نشد؛ باید با یک اکانت واقعی بررسی شود | [تأیید نشد] |
+| Proposal form fields include Cover Letter, rate/budget, Milestones, answers to client questions, Attachments, etc.; the API documentation shows a proposal is a `VendorProposal` object with `coverLetter`, `terms` (including Milestones/Rate), `attachments`, `projectPlan` and `annotations`. | [API Documentation (Upwork GraphQL)](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[Official]** |
+| `createJobProposal` (Mutation) exists in the official docs with the description "Create a new proposal using the new flow" and the "Submit Proposal" permission. | Same page | **[Official]** |
+| UI changes in 2025–2026: Uma (AI assistant) for drafting proposals (announced by Upwork in October 2024 and updated Spring 2026). | [Fast Company](https://www.fastcompany.com/91210506/upwork-unveils-new-capabilities-for-its-uma-ai-platform) (2024); [Being Guru](https://beingguru.com/upworks-new-ai-agent-uma-what-it-means-for-freelancers-in-2026/) (2026) | [Multiple sources] |
+| Exact details of the current application form UI (field order, Boost, Specialized Profile) | Unconfirmed; must be checked with a real account | [Unconfirmed] |
 
 ### A2. Connects
-| یافته | منبع | سطح |
+| Finding | Source | Level |
 |---|---|---|
-| Connects توکن‌های مصرفی برای ارسال پروپوزال، Boost و Availability Badge هستند. | [Understanding and using Connects](https://support.upwork.com/hc/en-us/articles/211062898-Understanding-and-using-Connects) | **[رسمی]** |
-| تعداد Connects **برای هر جاب متفاوت است** و بر اساس اندازه‌ی پروژه، دامنه و تقاضای بازار تعیین می‌شود؛ مقدار لازم در خود آگهی نشان داده می‌شود. | همان | **[رسمی]** |
-| Boost: مزایده‌ی کوتاه، شما حداکثر Connects را تعیین می‌کنید، مبلغ نهایی ممکن است کمتر باشد؛ Boost برای بالا رفتن در لیست است. | همان | **[رسمی]** |
-| Availability Badge: مصرف هفتگی با سقف دلخواه؛ قیمت بر اساس تقاضا تغییر می‌کند. | [About the Availability Badge](https://support.upwork.com/hc/en-us/articles/17935107001107--About-the-Availability-Badge) | **[رسمی]** |
-| پاداش‌های رایگان: ۳۰ Connects برای هر badge (Rising Talent، Top Rated، Top Rated Plus) با سقف ۹۰؛ ۱۰ Connects برای اولین Boost موفق؛ ۱۲ Connects برای ارسال ≥۳ پروپوزال با مجموع ≥۵۴ Connects (دو بار در ماه، «در حال آزمایش»). | همان مقاله‌ی Connects | **[رسمی]** |
-| **پاداش ۱۲ Connects** در حال آزمایش است و به همه تعلق نمی‌گیرد. | همان | **[رسمی]** |
-| Connects بازگشت‌پذیر (Rollover) است مگر منقضی شود؛ سقف نگهداری ندارد. | [جستجوی Help Center](https://support.upwork.com/hc/en-us/search?query=connects) | [چند منبع] |
-| **قیمت هر Connect = $0.15** | منابع ثالث (aiproposer، getmany، digistore و …) | [چند منبع ثالث] — **در صفحه‌ی رسمی که خواندم تأیید نشد** |
-| **تعداد Connects هر پروپوزال**: منابع ثالث از ۲–۱۶ تا میانه‌ی ۶ یا ۱۶ گزارش می‌کنند (تناقض بزرگ). | aiproposer (۲۰۲۶-۰۸)، gigradar (۲۰۲۶-۰۸)، upwex | **[تناقض]** — فقط باید از آگهی‌های واقعی جمع‌آوری شود |
-| قیمت Freelancer Plus: $14.99 (aiproposer) در برابر $19.99 (getmany و gigradar). | منابع ثالث | **[تناقض]** — در صفحه‌ی رسمی تأیید نشد |
-| Freelancer Plus: ۸۰ (۲۰۲۳) در برابر ۱۰۰ (۲۰۲۶) Connects ماهانه. | freelancemvp (۲۰۲۳)، منابع ۲۰۲۶ | **[تناقض]** — به‌روزترین: ۱۰۰ (۲۰۲۶) از چند منبع |
-| Connects رایگان ماهانه: ۱۰ (منابع ثالث) | منابع ثالث | [منبع واحد] — در متن رسمی که دیدم عدد ذکر نشده |
+| Connects are tokens spent on submitting proposals, Boost and the Availability Badge. | [Understanding and using Connects](https://support.upwork.com/hc/en-us/articles/211062898-Understanding-and-using-Connects) | **[Official]** |
+| The number of Connects **varies by job** and is set by project size, scope and market demand; the required amount is shown in the job post itself. | Same | **[Official]** |
+| Boost: a short auction; you set the maximum Connects and the final amount may be lower; Boost moves you up the list. | Same | **[Official]** |
+| Availability Badge: weekly spend with a cap of your choice; the price changes with demand. | [About the Availability Badge](https://support.upwork.com/hc/en-us/articles/17935107001107--About-the-Availability-Badge) | **[Official]** |
+| Free bonuses: 30 Connects per badge (Rising Talent, Top Rated, Top Rated Plus) with a cap of 90; 10 Connects for the first successful Boost; 12 Connects for submitting ≥3 proposals totalling ≥54 Connects (twice a month, "being tested"). | Same Connects article | **[Official]** |
+| The **12-Connects bonus** is being tested and is not granted to everyone. | Same | **[Official]** |
+| Connects roll over unless they expire; there is no holding cap. | [Help Center search](https://support.upwork.com/hc/en-us/search?query=connects) | [Multiple sources] |
+| **Price per Connect = $0.15** | Third-party sources (aiproposer, getmany, digistore, etc.) | [Multiple third-party sources] — **not confirmed on the official page I read** |
+| **Connects per proposal**: third parties report 2–16, with a median of 6 or 16 (a large conflict). | aiproposer (2026-08), gigradar (2026-08), upwex | **[Conflict]** — must be collected from real job posts |
+| Freelancer Plus price: $14.99 (aiproposer) vs $19.99 (getmany and gigradar). | Third-party sources | **[Conflict]** — not confirmed on the official page |
+| Freelancer Plus: 80 (2023) vs 100 (2026) Connects per month. | freelancemvp (2023), 2026 sources | **[Conflict]** — most recent: 100 (2026) from several sources |
+| Free monthly Connects: 10 (third-party sources) | Third-party sources | [Single source] — the official text I saw does not state a number |
 
-**استراتژی Connects (استنتاج معقول):** بودجه‌ی ماهانه بر اساس «هزینه برای هر جواب» (Cost per Reply) تعیین شود، نه هزینه‌ی هر پروپوزال. قبل از تصمیم، ۲–۳ هفته تعداد Connects واقعی هر جاب و نرخ پاسخ را لاگ کنید.
+**Connects strategy (reasonable inference):** set the monthly budget by "cost per reply", not cost per proposal. Before deciding, log the actual Connects per job and the reply rate for 2–3 weeks.
 
-### A3. الگوریتم و رتبه‌بندی
-| یافته | منبع | سطح |
+### A3. Algorithm and ranking
+| Finding | Source | Level |
 |---|---|---|
-| کلاینت‌ها در ابتدا فقط ابتدای Cover Letter، نام، عکس، badge، نرخ و Job Success Score (JSS) را می‌بینند. | [Upwork Resources: Why are my proposals not being viewed?](https://www.upwork.com/resources/why-are-my-proposals-not-being-viewed) | **[رسمی]** |
-| وقتی تعداد پروپوزال زیاد است، Upwork نزدیک‌ترین تطابق‌ها را اول نشان می‌دهد؛ سیگنال‌ها: پروفایل، مهارت‌ها، سابقه، JSS، عنوان و overview. | همان | **[رسمی]** |
-| Upwork از یک «Predictive Compatibility Engine» و ML برای رتبه‌بندی صحبت می‌کند، و سرعت پاسخ/ارسال زودهنگام اثر دارد. | upwex.io (۲۰۲۶-۰۴) | [منبع واحد] — **تأیید نشد** |
-| Uma Recruiter shortlisting در Basic plan (Spring 2026) | Being Guru، uphunt، و غیره | [منبع واحد / چند ثالث] — تأیید رسمی نشد |
-| «Proposals submitted within 15–60 minutes get 5–10 درصد reply بیشتر» | upwex.io | [منبع واحد] — **تأیید نشد** |
+| Clients initially see only the beginning of the Cover Letter, name, photo, badge, rate and Job Success Score (JSS). | [Upwork Resources: Why are my proposals not being viewed?](https://www.upwork.com/resources/why-are-my-proposals-not-being-viewed) | **[Official]** |
+| When there are many proposals, Upwork shows the closest matches first; signals: profile, skills, history, JSS, title and overview. | Same | **[Official]** |
+| Upwork speaks of a "Predictive Compatibility Engine" and ML for ranking, and response speed / early submission matters. | upwex.io (2026-04) | [Single source] — **unconfirmed** |
+| Uma Recruiter shortlisting in the Basic plan (Spring 2026) | Being Guru, uphunt, etc. | [Single source / multiple third parties] — not officially confirmed |
+| "Proposals submitted within 15–60 minutes get 5–10% more replies" | upwex.io | [Single source] — **unconfirmed** |
 
-### A4. بهترین روش‌های Cover Letter در ۲۰۲۶
-| یافته | منبع | سطح |
+### A4. Cover Letter best practices in 2026
+| Finding | Source | Level |
 |---|---|---|
-| فقط چند خط اول در لیست دیده می‌شود؛ شروع باید مسئله‌ی کارفرما را نشان دهد. | [Upwork Resources: How To Create a Proposal That Wins Jobs](https://www.upwork.com/resources/how-to-create-a-proposal-that-wins-jobs) (۲۰۲۶-۰۶-۲۴) | **[رسمی]** |
-| سه پاراگراف کوتاه، bullet points و پرهیز از بلوک‌های متنی طولانی. | همان | **[رسمی]** |
-| Summary شروع، Relevance، Proof (یک نتیجه‌ی عددی)، Next step/سوال. | چند ترد/وبلاگ (SnipeWork، aiproposer، upcat) | [چند منبع] |
-| طول ایده‌آل: ۱۵۰ تا ۲۵۰ کلمه (بیشترین اجماع)؛ برخی ۱۵۰ زیر. | aiproposer (۲۰۲۶)، SnipeWork (۲۰۲۶) | [چند منبع] |
-| عبارت «Thanks for posting» و «Many freelancers» از نظر داده‌ی vendor کاهش پاسخ دارند (n=213؛ تفاوت ۵.۵ واحد درصد). | GigRadar (۲۰۲۶-۰۵) | [منبع واحد / vendor] |
-| «Hi there, non-ChatGPT generated proposal» اثر منفی دارد (داده‌ی vendor) | GigRadar (۲۰۲۶-۰۵) | [منبع واحد / vendor] |
-| Upwork ادعا می‌کند راهنمای تشخیص متن AI دارد که الگوهایی مثل «Additionally»، «However» را فهرست می‌کند. | GigRadar (ارجاع به راهنمای رسمی) | **[تأیید نشد]** — لینک راهنما پیدا نشد |
+| Only the first few lines are visible in the list; the opening must show the client's problem. | [Upwork Resources: How To Create a Proposal That Wins Jobs](https://www.upwork.com/resources/how-to-create-a-proposal-that-wins-jobs) (2026-06-24) | **[Official]** |
+| Three short paragraphs; bullet points; avoid long blocks of text. | Same | **[Official]** |
+| Summary opening, Relevance, Proof (one numeric result), Next step/question. | Several threads/blogs (SnipeWork, aiproposer, upcat) | [Multiple sources] |
+| Ideal length: 150 to 250 words (most agreement); some say under 150. | aiproposer (2026), SnipeWork (2026) | [Multiple sources] |
+| The phrases "Thanks for posting" and "Many freelancers" reduce replies according to vendor data (n=213; a 5.5 percentage-point difference). | GigRadar (2026-05) | [Single source / vendor] |
+| "Hi there, non-ChatGPT generated proposal" has a negative effect (vendor data) | GigRadar (2026-05) | [Single source / vendor] |
+| Upwork claims to have an AI-text detection guide listing patterns such as "Additionally" and "However". | GigRadar (citing an official guide) | **[Unconfirmed]** — the guide link was not found |
 
-### A5. نگرش Upwork نسبت به پروپوزال AI
-| یافته | منبع | سطح |
+### A5. Upwork's attitude toward AI proposals
+| Finding | Source | Level |
 |---|---|---|
-| Upwork کمک AI را مجاز می‌داند؛ اما باید **اصیل (original)** باشد و تطابق با شرایط پلتفرم AI مربوطه را داشته باشد. | نقل از راهنمای Upwork در Beingguru (۲۰۲۶-۰۹) و Convertix (۲۰۲۶-۰۳) | [چند منبع ثالث با نقل قول مشابه] |
-| راهنمای «Ethics of AI on Upwork» افشای استفاده از AI را به کارفرما توصیه/الزام می‌کند («Always disclose to clients whether you use AI-generated content or tools»). | Beingguru (نقل از راهنما) | [منبع واحد نقل‌شده] — لینک رسمی را پیدا نکردم |
-| شرایط استفاده (Terms of Use نسخه‌ی سپتامبر ۲۰۲۵): «نمی‌توانید کار یا پروپوزال خود را با AI مخدوش کنید اگر کارفرما منع کرده باشد یا حق ثالث نقض شود.» | Reddit (خلاصه‌ی متن، ۲۰۲۵-۰۹) | [منبع واحد / خلاصه] — متن کامل در Legal Center باید بررسی شود |
-| Upwork از ژانویه ۲۰۲۶ اجازه‌ی استفاده‌ی کار/پیام‌ها برای آموزش AI را دارد مگر کاربر opt-out کند. | Beingguru (۲۰۲۶-۰۹) | [منبع واحد] — **تأیید نشد**؛ تنظیمات AI preferences را خودتان چک کنید |
+| Upwork allows AI assistance, but the result must be **original (authentic)** and comply with the terms of the relevant AI platform. | Quoted from Upwork's guide in Beingguru (2026-09) and Convertix (2026-03) | [Multiple third-party sources with similar quotes] |
+| The "Ethics of AI on Upwork" guide recommends/requires disclosing AI use to the client ("Always disclose to clients whether you use AI-generated content or tools"). | Beingguru (quoting the guide) | [Single quoted source] — I did not find the official link |
+| Terms of Use (September 2025 version): "you may not misrepresent your work or proposal with AI if the client has prohibited it or third-party rights would be violated." | Reddit (summary of the text, 2025-09) | [Single source / summary] — the full text should be checked in the Legal Center |
+| Since January 2026, Upwork may use work/messages to train AI unless the user opts out. | Beingguru (2026-09) | [Single source] — **unconfirmed**; check your AI preferences yourself |
 
-### A6. انواع جاب
-| یافته | سطح |
+### A6. Job types
+| Finding | Level |
 |---|---|
-| Fixed-price (Milestones) در مقابل Hourly؛ Hourly تحت Upwork Guarantee و بر اساس Work diary (مستندات رسمی). | [رسمی] |
-| Enterprise، Contract-to-hire و سطح تجربه در فیلترهای Search API (مثلاً `enterpriseOnly_eq`، `contractorTier_eq`، `jobType_eq`) | [رسمی] (فیلترها) |
-| تفاوت استراتژی پروپوزال بر اساس نوع جاب: استنتاج معقول (Fixed برای نتیجه‌ی مشخص، Hourly برای همکاری بلندمدت). | استنتاج |
+| Fixed-price (Milestones) vs Hourly; Hourly is covered by the Upwork Guarantee and based on the Work diary (official documentation). | [Official] |
+| Enterprise, Contract-to-hire and experience level in Search API filters (e.g. `enterpriseOnly_eq`, `contractorTier_eq`, `jobType_eq`) | [Official] (filters) |
+| Proposal strategy differs by job type: a reasonable inference (Fixed for a defined outcome, Hourly for a long-term collaboration). | Inference |
 
-### A7. Red flagها
-| یافته | سطح |
+### A7. Red flags
+| Finding | Level |
 |---|---|
-| مستندات رسمی معنای «Client Verified Payment» در فیلتر `verifiedPaymentOnly_eq` را دارند. | [رسمی] |
-| کارفرمای بدون پرداخت تأییدشده، هزینه‌ی کم، درخواست خروج از پلتفرم، سوال‌های مشکوک، و نرخ پایین با پروژه‌ی بزرگ = الگوهای پرخطر. | [استنتاج معقول بر اساس تجربه‌ی جامعه؛ تأیید رسمی نشد] |
-| مدت و تعداد ساعت در Hourly باید با Work diary/تنظیمات قرارداد هم‌خوان باشد. | [رسمی — مستندات مفهوم Work diary] |
+| Official documentation explains "Client Verified Payment" in the `verifiedPaymentOnly_eq` filter. | [Official] |
+| A client without verified payment, a low budget, requests to leave the platform, suspicious questions, and a low rate with a large project = high-risk patterns. | [Reasonable inference from community experience; not officially confirmed] |
+| Duration and hours in Hourly must match the Work diary/contract settings. | [Official — Work diary concept documentation] |
 
-### A8. قوانین و ریسک اتوماسیون (مهم‌ترین بخش)
-| یافته | منبع | سطح |
+### A8. Terms and automation risk (most important section)
+| Finding | Source | Level |
 |---|---|---|
-| **Upwork MCP (رسمی):** ایجنت AI می‌تواند پروپوزال را **پیش‌نویس** کند؛ ارسال‌ها (پروپوزال/پیام) **نیازمند تأیید شما** هستند. مصرف Connects مثل وب‌سایت است. «نیاز به API key اختصاصی برای جریان‌های خودکار با حجم بالا». | [upwork.com/ai/mcp](https://www.upwork.com/ai/mcp) (۲۰۲۶-۰۸) | **[رسمی]** |
-| در شرایط MCP/API: ایجنت نباید به‌صورت خودکار از تأیید انسانی عبور کند (بند ۵.۲ و ۴.۱ در تحلیل uphunt؛ متن کامل نرسید). | uphunt.io (۲۰۲۶-۰۹) | [منبع واحد / تحلیل] |
-| شرایط استفاده‌ی Terms of Use قدیمی‌تر (نسخه ۴.۱۲، بند ۳.۵): ممنوعیت «robot, spider, scraper … without written permission» و دسترسی با فناوری غیر از رابط رسمی. | GigRadar (نقل از نسخه‌ی قدیمی) | [منبع واحد / قدیمی] — **نسخه‌ی فعلی باید بررسی شود** |
-| User Agreement نسخه ۸.۲ (مؤثر از ۲۰ جولای ۲۰۲۶) و Terms of Service نسخه ۷.۳ (۲۸ جولای ۲۰۲۵) | [Legal Center](https://www.upwork.com/legal) | **[رسمی]** (تاریخ) |
-| User باید یک فرد باشد و اشتراک اکانت مجاز نیست. | [API Documentation](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[رسمی]** |
-| اسکرپینگ صفحات سایت، ربات‌های auto-submit، مرورگر-اکستنشن‌هایی که رفرش/ثبت می‌کنند = ریسک بالای بن | چند منبع vendor و Reddit | [چند منبع / تجربه کاربران] |
+| **Upwork MCP (official):** an AI agent can **draft** a proposal; submissions (proposals/messages) **require your approval**. Connects are consumed as on the website. "An API key is required for high-volume automated flows." | [upwork.com/ai/mcp](https://www.upwork.com/ai/mcp) (2026-08) | **[Official]** |
+| Under MCP/API terms, an agent must not automatically bypass human approval (sections 5.2 and 4.1 in the uphunt analysis; the full text was not available). | uphunt.io (2026-09) | [Single source / analysis] |
+| The older Terms of Use (version 4.12, section 3.5) prohibit a "robot, spider, scraper … without written permission" and access through technology other than the official interface. | GigRadar (quoting the older version) | [Single source / old] — **the current version must be checked** |
+| User Agreement version 8.2 (effective 20 July 2026) and Terms of Service version 7.3 (28 July 2025) | [Legal Center](https://www.upwork.com/legal) | **[Official]** (dates) |
+| A User must be a single person; account sharing is not allowed. | [API Documentation](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[Official]** |
+| Scraping site pages, auto-submit bots, and browser extensions that refresh/submit = high ban risk | Several vendor sources and Reddit | [Multiple sources / user experience] |
 
-**نتیجه‌گیری ToS (روشن):**
-- **ایجنت مجاز:** خواندن ایمیل‌های Upwork (Job Alert و پیام) از صندوق شخصی، استخراج، امتیازدهی، پیش‌نویس پروپوزال، ارسال به تلگرام.
-- **انسان:** باز کردن جاب در Upwork، بازبینی، کپی و **ثبت دستی** پروپوزال.
-- **ممنوع/پرریسک:** اسکرپ صفحات جاب، ثبت خودکار پروپوزال، لاگین ایجنت به حساب شما، ارسال پیام خودکار به کارفرما، ساخت اکانت‌های متعدد.
+**ToS conclusion (clear):**
+- **Agent allowed:** reading Upwork emails (Job Alerts and messages) from a personal inbox, extracting, scoring, drafting proposals, sending to Telegram.
+- **Human:** opening the job on Upwork, reviewing, copying and **submitting manually**.
+- **Prohibited/high-risk:** scraping job pages, automatic proposal submission, agent login to your account, automatic messaging to clients, creating multiple accounts.
 
-### A9. Upwork API و ایمیل
-| یافته | منبع | سطح |
+### A9. Upwork API and email
+| Finding | Source | Level |
 |---|---|---|
-| API GraphQL رسمی در `https://api.upwork.com/graphql` با OAuth 2.0 | [API Docs](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[رسمی]** |
-| شرایط درخواست API key: نام معتبر، آدرس، عکس، پرداخت تأییدشده، ID verification، **≥ $25,000 درآمد/هزینه‌ی تجمعی**، **JSS ≥ ۹۰٪**، حساب بدون تعلیق؛ و محدودیت **۴۰,۰۰۰ درخواست در روز**. | همان | **[رسمی]** |
-| `marketplaceJobPostingsSearch` با فیلترهای زیاد (`searchExpression`، `budgetRange`، `daysPosted`، `verifiedPaymentOnly`، `clientFeedBackRange`، `locations`، …) برای جستجوی عمومی. | همان | **[رسمی]** |
-| ⚠️ **تناقض:** GigRadar ادعا می‌کند API رسمی هیچ mutation برای ثبت پروپوزال ندارد. **این ادعا با مستندات رسمی (`createJobProposal`) در تضاد است.** | GigRadar (۲۰۲۶-۰۸) در برابر مستندات رسمی | **[اولویت با رسمی]** |
-| اما: استفاده از `createJobProposal` عملاً نیازمند مجوز و تأیید کلید است (شرایط بالا) و از نظر ToS باید «human-confirmed» باشد. | استنتاج از شرایط + MCP | استنتاج |
-| ایمیل Job Alert (تنظیمات رسمی): Basic: تا ۳۰ Saved Search با ایمیل/فید. Freelancer Plus: Instant Job Alerts (ایمیل یا اپ). | [Upwork Help: email notification settings](https://support.upwork.com/hc/en-us/articles/211067708-How-to-change-your-Upwork-email-and-notification-settings) و منابع ثالث | [رسمی] برای Messages؛ بقیه [چند منبع] |
-| فرکانس پیش‌فرض ایمیل پیام‌ها: ۱۵ دقیقه (رسمی). | همان | **[رسمی]** |
-| محتوای ایمیل Job Alert: عنوان، بخشی از توضیح، بودجه و لینک. فیلدهایی مثل تاریخچه‌ی هزینه کارفرما، hire rate، تعداد پروپوزال‌ها، skill tags و Connects معمولاً **در ایمیل نیستند**. | tryvibeworker.com (۲۰۲۶-۱۰) و upworkalerts.com (۲۰۲۶-۰۵) | [منبع واحد / چند ثالث] — **باید با ایمیل واقعی شما تأیید شود** |
-| ارسال ایمیل Alert «Instant» به‌صورت batch است و ممکن است ۱۵ دقیقه تا چند ساعت تأخیر داشته باشد. | ثالث | [منبع واحد] |
+| Official GraphQL API at `https://api.upwork.com/graphql` with OAuth 2.0 | [API Docs](https://www.upwork.com/developer/documentation/graphql/api/docs/index.html) | **[Official]** |
+| API key requirements: valid name, address, photo, verified payment, ID verification, **≥ $25,000 cumulative earnings/spend**, **JSS ≥ 90%**, account not suspended; and a **40,000 requests/day** limit. | Same | **[Official]** |
+| `marketplaceJobPostingsSearch` with many filters (`searchExpression`, `budgetRange`, `daysPosted`, `verifiedPaymentOnly`, `clientFeedBackRange`, `locations`, …) for public search. | Same | **[Official]** |
+| ⚠️ **Conflict:** GigRadar claims the official API has no mutation to submit a proposal. **This contradicts the official documentation (`createJobProposal`).** | GigRadar (2026-08) vs official docs | **[Official wins]** |
+| But: using `createJobProposal` in practice requires permission and key approval (conditions above), and under the ToS it must be "human-confirmed". | Inference from the conditions + MCP | Inference |
+| Job Alert email (official settings): Basic: up to 30 Saved Searches with email/feed. Freelancer Plus: Instant Job Alerts (email or app). | [Upwork Help: email notification settings](https://support.upwork.com/hc/en-us/articles/211067708-How-to-change-your-Upwork-email-and-notification-settings) and third-party sources | [Official] for Messages; the rest [Multiple sources] |
+| Default email frequency for messages: 15 minutes (official). | Same | **[Official]** |
+| Job Alert email content: title, part of the description, budget and link. Fields such as client spend history, hire rate, proposal count, skill tags and Connects are usually **not in the email**. | tryvibeworker.com (2026-10) and upworkalerts.com (2026-05) | [Single source / multiple third parties] — **must be confirmed with your real email** |
+| "Instant" alert emails are batched and may arrive 15 minutes to several hours late. | Third party | [Single source] |
 
 ---
 
-## بخش B — ایجنت خوب چه ویژگی‌هایی دارد؟
+## Part B — What makes a good agent?
 
-### B1. ابزارهای موجود (تحلیل کلی)
-| ابزار/دسته | نقطه‌ی قوت | ضعف | منبع |
+### B1. Existing tools (general analysis)
+| Tool/category | Strength | Weakness | Source |
 |---|---|---|---|
-| ابزارهای تجاری (GigRadar، Vollna، UpHunt، …) | Scanner، امتیاز و پیش‌نویس | پروپوزال‌های عمومی و الگوی یکسان، ابهام ToS در بعضی Auto-bid | وب‌سایت‌ها (vendor) [منبع واحد / تبلیغاتی] |
-| Uma (داخلی Upwork) | پیش‌نویس در محل | عمومی؛ مشابه برای همه؛ تغییرات سریع | [رسمی] خبر ۲۰۲۴ |
-| ابزارهای Auto-submit | سرعت | بن | [چند منبع / تجربه کاربران] |
+| Commercial tools (GigRadar, Vollna, UpHunt, …) | Scanner, scoring and drafting | Generic proposals and a uniform template; ToS ambiguity in some auto-bid tools | Websites (vendor) [Single source / promotional] |
+| Uma (built into Upwork) | Drafts in place | Generic; similar for everyone; changes quickly | [Official] 2024 news |
+| Auto-submit tools | Speed | Ban | [Multiple sources / user experience] |
 
-**چرا پروپوزال‌های عمومی ضعیف‌اند؟** به‌خاطر پرامپت ساده (بدون پروفایل و نمونه‌ی واقعی)، ارتباط نداشتن با جاب، و ثابت بودن ساختار. (استنتاج)
+**Why generic proposals are weak:** a simple prompt (no profile or real examples), no connection to the job, and a fixed structure. (Inference)
 
-### B2. اصول طراحی
-| اصل | توضیح | سطح |
+### B2. Design principles
+| Principle | Description | Level |
 |---|---|---|
-| Grounding | فقط حقایق از پروفایل/نمونه‌کار شما؛ هر ادعا به منبع وصل شود؛ ادعای ناشناخته = placeholder | استنتاج قوی |
-| Human-in-the-loop | ارسال فقط توسط شما؛ ایجنت فقط پیش‌نویس | [رسمی: MCP] |
-| کاهش Hallucination | JSON Schema، اعتبارسنجی Pydantic، بررسی claims با لیست پروفایل | استنتاج |
-| تنوع | پرهیز از الگوی تکراری؛ جمله‌ی اول وابسته به جاب | [چند منبع] |
-| ارزیابی خودکار | LLM-as-judge + چک‌لیست قواعد (طول، cliche، سوال نهایی) | استنتاج |
+| Grounding | Only facts from your profile/portfolio; every claim tied to a source; an unknown claim becomes a placeholder | Strong inference |
+| Human-in-the-loop | Only you submit; the agent only drafts | [Official: MCP] |
+| Hallucination reduction | JSON Schema, Pydantic validation, claim checking against the profile list | Inference |
+| Variety | Avoid a repeating pattern; the first sentence depends on the job | [Multiple sources] |
+| Automated evaluation | LLM-as-judge + a rules checklist (length, clichés, closing question) | Inference |
 
-### B3. Few-shot / RAG / بازخورد
-- **MVP:** Few-shot ثابت (۲–۳ نمونه‌ی خوب از خود شما) + پروفایل تعریف‌شده در YAML.
-- **فاز ۲:** ذخیره‌ی پروپوزال‌های تأییدشده و نتیجه (پاسخ/مصاحبه/قرارداد) در SQLite، انتخاب top-k نمونه‌ی مشابه با embedding ساده یا TF-IDF.
-- **بازخورد:** دکمه‌ها/دستورات تلگرام: approve / edit / reject / applied / replied / hired.
-- **ارزیابی:** مقایسه‌ی متن نهایی شما با پیش‌نویس (edit distance) → اگر کاهش یابد، پرامپت بهتر است.
+### B3. Few-shot / RAG / feedback
+- **MVP:** fixed few-shot examples (2–3 good examples from you) + a profile defined in YAML.
+- **Phase 2:** store approved proposals and outcomes (reply/interview/contract) in SQLite; pick top-k similar examples with a simple embedding or TF-IDF.
+- **Feedback:** Telegram buttons/commands: approve / edit / reject / applied / replied / hired.
+- **Evaluation:** compare your final text with the draft (edit distance); if it decreases, the prompt is better.
 
-### B4. معیارهای ارزیابی
-| معیار | تعریف | هدف اولیه (پیشنهادی) |
+### B4. Evaluation metrics
+| Metric | Definition | Initial target (suggested) |
 |---|---|---|
-| Extraction accuracy | درصد فیلدهای درست در ۵۰ ایمیل برچسب‌خورده | ≥ ۹۰٪ برای عنوان/بودجه/لینک |
-| Precision of "apply" | از جاب‌های پیشنهاد شده، چند درصد را واقعاً می‌خواستید | ≥ ۶۰٪ |
-| Edit rate | درصد پروپوزال‌هایی که بیش از ۳۰٪ ویرایش شدند | کاهش ماه‌به‌ماه |
-| Reply rate / Interview rate | از پروپوزال‌های ارسال‌شده | بر اساس پایه‌ی خودتان؛ ۴ هفته ابتدا فقط اندازه بگیرید |
-| Cost per reply | (Connects × قیمت) ÷ پاسخ‌ها | ثبت شود |
+| Extraction accuracy | Percentage of correct fields across 50 labelled emails | ≥ 90% for title/budget/link |
+| Precision of "apply" | Of the suggested jobs, what percentage you actually wanted | ≥ 60% |
+| Edit rate | Percentage of proposals edited by more than 30% | Decreasing month over month |
+| Reply rate / Interview rate | Of submitted proposals | Against your own baseline; measure for the first 4 weeks |
+| Cost per reply | (Connects × price) ÷ replies | Record it |
 
 ---
 
-## تناقض‌ها خلاصه (برای مراجعه سریع)
+## Summary of conflicts (for quick reference)
 
-1. Connects per proposal: ۲–۱۶ (ثالث) ↔ «متغیر، در آگهی نشان داده می‌شود» (رسمی) → باید از آگهی‌های واقعی جمع کنید.
-2. قیمت Connect ($0.15): ثالث ↔ رسمی تأیید نشد.
-3. Freelancer Plus: $14.99 ↔ $19.99؛ ۸۰ ↔ ۱۰۰ Connects.
-4. API proposal mutation: GigRadar «ندارد» ↔ **رسمی دارد** (`createJobProposal`، مجوز محدود).
-5. AI disclosure: راهنمای ادعایی «افشای همیشگی» ↔ شرایط «ممنوعیت تخلف در صورت منع کارفرما» (ترکیب هر دو = شفافیت + اصالت).
-6. Uma Recruiter shortlisting Basic: ثالث ↔ تأیید رسمی نشد.
+1. Connects per proposal: 2–16 (third party) ↔ "varies, shown in the job post" (official) → collect from real job posts.
+2. Connect price ($0.15): third party ↔ not confirmed officially.
+3. Freelancer Plus: $14.99 ↔ $19.99; 80 ↔ 100 Connects.
+4. API proposal mutation: GigRadar "does not exist" ↔ **officially it does** (`createJobProposal`, restricted permission).
+5. AI disclosure: a claimed "always disclose" guide ↔ terms "prohibited if the client forbids it" (combining both = transparency + originality).
+6. Uma Recruiter shortlisting on Basic: third party ↔ not officially confirmed.

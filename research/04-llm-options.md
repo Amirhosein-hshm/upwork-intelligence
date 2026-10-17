@@ -1,83 +1,83 @@
-# ۰۴ — مقایسه LLMهای رایگان و پیشنهاد نهایی (وضعیت اکتبر ۲۰۲۶)
+# 04 — Comparison of free LLMs and final recommendation (status October 2026)
 
-> **قاعده‌ی خواندن این فایل:** اعداد Free tier بین منابع **تناقض** دارند و صفحات رسمی همه‌ی آن‌ها در این جلسه قابل خواندن نبود. ستون «سطح» مشخص می‌کند هر عدد از کجا آمده. **قبل از تکیه، با یک تست کوچک (یک روز، ۱۰ درخواست) و چک کردن کنسول هر ارائه‌دهنده، تأیید کنید.**
+> **How to read this file:** free-tier numbers **conflict** between sources, and the official pages of all of them could not be read in this session. The "level" column shows where each number came from. **Before relying on them, verify with a small test (one day, 10 requests) and by checking each provider's console.**
 
 ---
 
-## ۱. محدودیت جغرافیایی و شرایط منطقه‌ای (مهم‌تر از اعداد)
+## 1. Geographic restrictions and regional terms (more important than the numbers)
 
-> **وضعیت کاربر (اعلام ۲۰۲۶-۱۰-۱۶):** کاربر خارج از ایران است. اما هر ارائه‌دهنده شرایط منطقه‌ای خودش را دارد و **باید برای کشور واقعی کاربر تأیید شود**. ستون زیر وضعیت را برای ایران نشان می‌دهد، چون محدودیت‌های اعلام‌شده‌ی Gemini و OpenAI و Upwork در همین سطح قرار دارند.
+> **User status (statement of 2026-10-16):** the user is outside Iran. However, each provider has its own regional terms and they **must be confirmed for the user's actual country**. The column below shows the status for Iran, because the stated restrictions of Gemini, OpenAI and Upwork are at that level.
 
-| ارائه‌دهنده | وضعیت منطقه‌ای (ایران؛ برای مقایسه) | منبع | سطح |
+| Provider | Regional status (Iran; for comparison) | Source | Level |
 |---|---|---|---|
-| **Gemini API / AI Studio** | ایران در فهرست «Available regions» نیست (به‌روزرسانی ۲۰۲۶-۰۴-۲۸). شرایط: «You may only access the Services … within an available region.» | [Available regions](https://ai.google.dev/gemini-api/docs/available-regions) و [Terms](https://ai.google.dev/gemini-api/terms) | **[رسمی]** |
-| **OpenAI (ChatGPT/API)** | دسترسی مستقیم از ایران محدود است؛ OpenAI در ۲۰۲۶ گزارش شده که ایران را خارج از سرویس می‌داند. | [Cryptobriefing (۲۰۲۶-۱۰)](https://cryptobriefing.com/openai-disrupts-iranian-fake-articles-campaign/)، [Moveo (۲۰۲۶-۰۵)](https://moveo.ai/blog/countries-where-chatgpt-is-banned) | [چند منبع] |
-| **Upwork** | **ممنوع** برای ثبت‌نام و استفاده (رسمی) | [Eligibility](https://support.upwork.com/hc/en-us/articles/211067778-Who-s-eligible-to-join-and-use-Upwork) | **[رسمی]** |
-| Groq، OpenRouter، Cerebras، Mistral، Cloudflare Workers AI | **تأیید نشد.** این ارائه‌دهندگان در شرایط خود محدودیت کشور دارند یا ندارند؛ باید در صفحات «Supported countries/Terms» هر کدام چک شود. | — | [تأیید نشد] |
-| Ollama / llama.cpp (مدل محلی) | بدون وابستگی به سرویس خارجی **بعد از دانلود مدل**؛ دانلود مدل از سایت‌های خارجی ممکن است محدود باشد (تأیید نشد). | استنتاج | استنتاج |
+| **Gemini API / AI Studio** | Iran is not in the "Available regions" list (updated 2026-04-28). Terms: "You may only access the Services … within an available region." | [Available regions](https://ai.google.dev/gemini-api/docs/available-regions) and [Terms](https://ai.google.dev/gemini-api/terms) | **[Official]** |
+| **OpenAI (ChatGPT/API)** | Direct access from Iran is restricted; OpenAI was reported in 2026 to consider Iran out of service. | [Cryptobriefing (2026-10)](https://cryptobriefing.com/openai-disrupts-iranian-fake-articles-campaign/), [Moveo (2026-05)](https://moveo.ai/blog/countries-where-chatgpt-is-banned) | [Multiple sources] |
+| **Upwork** | **Prohibited** for registration and use (official) | [Eligibility](https://support.upwork.com/hc/en-us/articles/211067778-Who-s-eligible-to-join-and-use-Upwork) | **[Official]** |
+| Groq, OpenRouter, Cerebras, Mistral, Cloudflare Workers AI | **Unconfirmed.** These providers may or may not have country restrictions in their terms; check the "Supported countries/Terms" page of each. | — | [Unconfirmed] |
+| Ollama / llama.cpp (local model) | No dependency on an external service **after downloading the model**; downloading a model from foreign sites may be restricted (unconfirmed). | Inference | Inference |
 
-### پیام صریح
-1. **چک کشور:** قبل از ثبت‌نام، صفحه‌ی منطقه‌ی مجاز هر ارائه‌دهنده را برای کشور محل زندگی واقعی خودتان بررسی کنید (Gemini: «Available regions»؛ بقیه: صفحات Terms/Supported countries).
-2. **حساب به نام واقعی:** کلیدهای API و حساب‌ها باید به نام و با اطلاعات واقعی شما ساخته شوند. استفاده از حساب شخص دیگر یا اطلاعات نادرست، شرایط همه‌ی این سرویس‌ها را نقض می‌کند.
-3. **دور زدن محدودیت پیشنهاد نمی‌شود:** VPN، پروکسی یا سرور برای پنهان‌کردن محل، ریسک قطع اکانت دارد و این فایل آن را توصیه نمی‌کند.
-4. **سرور فقط اجرای کد است:** VPS شما محدودیت حساب را حل نمی‌کند؛ محدودیت بر اساس محل و هویت صاحب حساب است.
-5. اعداد زیر در شرایط واقعی شما باید تست شوند.
+### Explicit message
+1. **Check the country:** before registering, review each provider's allowed-region page for the country you actually live in (Gemini: "Available regions"; others: Terms/Supported countries pages).
+2. **Accounts in your real name:** API keys and accounts must be created in your name with your real information. Using someone else's account or false information violates the terms of all these services.
+3. **Circumvention is not recommended:** a VPN, proxy or server used to hide your location risks account termination, and this file does not recommend it.
+4. **A server only runs code:** your VPS does not solve an account restriction; the restriction is based on the location and identity of the account holder.
+5. The numbers below must be tested under your real conditions.
 
 ---
 
-## ۲. جدول مقایسه (Free tier)
+## 2. Comparison table (free tier)
 
-> ستون‌ها: **Extract** = استخراج ساختاری؛ **Write** = نوشتن انگلیسی؛ **حریم خصوصی** = آیا داده برای آموزش استفاده می‌شود؛ **ریسک** = احتمال تغییر/حذف Free tier.
+> Columns: **Extract** = structured extraction; **Write** = English writing; **Privacy** = whether data is used for training; **Risk** = likelihood of the free tier changing/being removed.
 
-| ارائه‌دهنده | مدل‌های پیشنهادی | RPM | RPD | TPM / TPD | Context | JSON/Structured | Extract | Write | حریم خصوصی | ریسک Free | سطح اعداد |
+| Provider | Suggested models | RPM | RPD | TPM / TPD | Context | JSON/Structured | Extract | Write | Privacy | Free-tier risk | Number level |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| **Google Gemini API (Unpaid)** | Gemini 3 Flash؛ 2.5 Flash؛ 3.1 Flash-Lite | ۱۰ (3 Flash) / ۱۵ (Flash-Lite) | ۱۵۰۰ (3 Flash) / ۱۰۰۰ (Flash-Lite) | ۲۵۰K TPM | ۱M | پشتیبانی شده (مستندات عمومی؛ **تست لازم**) | ★★★★ | ★★★★ | **Unpaid: Google از داده برای بهبود محصول استفاده می‌کند و ممکن است بازبین انسانی بخواند.** Paid: آموزش نمی‌شود. | متوسط (Free tier قابل تغییر) | اعداد: [چند منبع ثالث]؛ **رسمی در این جلسه خوانده نشد** |
-| **Groq** | openai/gpt-oss-120b / 20b؛ Qwen (در فهرست فعلی) | ۳۰ | ۱۰۰۰ (مدل‌های بزرگ) / ۱۴٬۴۰۰ (مدل‌های کوچک، منابع ثالث) | **۸K TPM و ۲۰۰K TPD** (مدل بزرگ) | ۱۲۸K | پشتیبانی (تست لازم) | ★★★★ | ★★★ (120b) | **تأیید نشد** | متوسط؛ فهرست مدل‌ها بین منابع ثالث متفاوت است | اعداد Developer plan از **صفحه‌ی رسمی** ([Rate limits](https://console.groq.com/docs/rate-limits)): ۳۰ RPM / ۱K RPD / ۸K TPM / ۲۰۰K TPD برای gpt-oss-120b |
-| **OpenRouter (مدل‌های `:free`)** | `openrouter/free` یا مدل‌های `:free` (تغییرپذیر) | ۲۰ | **۵۰** (زیر $۱۰ شارژ) / **۱۰۰۰** (بعد از ~$۱۰ شارژ یک‌باره) | تأیید نشد | متغیر | متغیر | ★★★ | ★★★ | **برخی مدل‌های رایگان ممکن است پرامپت را آموزش دهند**؛ تنظیم «may train» را خاموش کنید | بالا (فهرست مدل‌ها مرتب تغییر می‌کند) | [چند منبع ثالث هم‌نظر: aireiter (۲۰۲۶-۰۸)، klymentiev (۲۰۲۶-۰۹)] — رسمی تأیید نشد |
-| **Cerebras** | GPT-OSS / Llama (مدل‌های انتخابی) | **تناقض:** ۳۰ (منبع A) / ~۵ (منبع B) | — | **تناقض:** ۱M توکن/روز (A) / ۳۰K TPM (B) | ۸K در free (منبع B) | تأیید نشد | ★★★ | ★★★ | تأیید نشد | متوسط | **[تناقض بین منابع]** |
-| **Mistral (La Plateforme, Experiment)** | Mistral Small / Large؛ Codestral | ~۲ (گزارش‌های کاربری) | — | ~۱B توکن/ماه (گزارش) | ۳۲K–۲۵۶K | پشتیبانی (تست) | ★★★ | ★★★★ | تأیید نشد | متوسط؛ محدودیت‌ها منتشر نمی‌شود | **[منبع واحد / گزارش کاربر]** |
-| **Cloudflare Workers AI** | Llama 3.x 8B؛ مدل‌های دیگر | — | — | **۱۰٬۰۰۰ Neuron/روز** (واحد اختصاصی، نه توکن) | کوتاه/متوسط | تأیید نشد | ★★★ | ★★ | ادعای عدم آموزش با داده‌ی مشتری (منبع ثالث) | پایین تا متوسط | [منبع ثالث] |
-| **Ollama (محلی)** | Qwen2.5 7B–14B؛ Llama 3.1 8B؛ Gemma 3 (نسل‌های در دسترس) | نامحدود (سخت‌افزار) | نامحدود | — | ۸K–۱۲۸K بسته به مدل | با grammar/JSON mode (تست) | ★★★ (7B) / ★★★★ (14B) | ★★★ (7B) / ★★★★ (14B) | **داده روی سیستم شما می‌ماند** | ندارد (هزینه‌ی برق/سخت‌افزار) | استنتاج؛ تست لازم |
+| **Google Gemini API (Unpaid)** | Gemini 3 Flash; 2.5 Flash; 3.1 Flash-Lite | 10 (3 Flash) / 15 (Flash-Lite) | 1500 (3 Flash) / 1000 (Flash-Lite) | 250K TPM | 1M | Supported (public docs; **needs testing**) | ★★★★ | ★★★★ | **Unpaid: Google uses data to improve its products and human reviewers may read it.** Paid: not used for training. | Medium (free tier can change) | Numbers: [multiple third-party sources]; **official not read in this session** |
+| **Groq** | openai/gpt-oss-120b / 20b; Qwen (current list) | 30 | 1000 (large models) / 14,400 (small models, third-party) | **8K TPM and 200K TPD** (large model) | 128K | Supported (needs testing) | ★★★★ | ★★★ (120b) | **Unconfirmed** | Medium; the model list differs between third-party sources | Numbers from the **official** Developer plan page ([Rate limits](https://console.groq.com/docs/rate-limits)): 30 RPM / 1K RPD / 8K TPM / 200K TPD for gpt-oss-120b |
+| **OpenRouter (`:free` models)** | `openrouter/free` or `:free` models (changeable) | 20 | **50** (under $10 credit) / **1000** (after a one-time ~$10 credit) | Unconfirmed | Variable | Variable | ★★★ | ★★★ | **Some free models may train on prompts**; turn off the "may train" setting | High (the model list changes often) | [Multiple third-party sources agree: aireiter (2026-08), klymentiev (2026-09)] — officially unconfirmed |
+| **Cerebras** | GPT-OSS / Llama (selected models) | **Conflict:** 30 (source A) / ~5 (source B) | — | **Conflict:** 1M tokens/day (A) / 30K TPM (B) | 8K on free (source B) | Unconfirmed | ★★★ | ★★★ | Unconfirmed | Medium | **[Conflict between sources]** |
+| **Mistral (La Plateforme, Experiment)** | Mistral Small / Large; Codestral | ~2 (user reports) | — | ~1B tokens/month (report) | 32K–256K | Supported (needs testing) | ★★★ | ★★★★ | Unconfirmed | Medium; limits are not published | **[Single source / user report]** |
+| **Cloudflare Workers AI** | Llama 3.x 8B; other models | — | — | **10,000 Neurons/day** (a proprietary unit, not tokens) | Short/medium | Unconfirmed | ★★★ | ★★ | Claims no training on customer data (third party) | Low to medium | [Third party] |
+| **Ollama (local)** | Qwen2.5 7B–14B; Llama 3.1 8B; Gemma 3 (available generations) | Unlimited (hardware) | Unlimited | — | 8K–128K depending on the model | With grammar/JSON mode (needs testing) | ★★★ (7B) / ★★★★ (14B) | ★★★ (7B) / ★★★★ (14B) | **Data stays on your machine** | None (electricity/hardware cost) | Inference; needs testing |
 
-**یادداشت‌های تکمیلی:**
-- **Gemini 2.5 Pro:** منابع ثالث می‌گویند از Free tier حذف شده (۱ آوریل ۲۰۲۶) یا ۵۰ RPD دارد؛ **تناقض**. برای این پروژه لازم نیست.
-- **Groq:** فهرست مدل‌های رایگان بین منابع ثالث متفاوت است؛ قبل از پین کردن نام مدل، از کنسول چک شود.
-- **Google Search grounding** و **Vertex AI** برای این پروژه لازم نیستند.
+**Additional notes:**
+- **Gemini 2.5 Pro:** third-party sources say it was removed from the free tier (1 April 2026) or has 50 RPD; **conflict**. Not needed for this project.
+- **Groq:** the list of free models differs between third-party sources; check the console before pinning a model name.
+- **Google Search grounding** and **Vertex AI** are not needed for this project.
 
 ---
 
-## ۳. محاسبه‌ی حجم واقعی (با فرض‌ها)
+## 3. Real volume calculation (with assumptions)
 
-**فرض‌ها (صریح):**
-- هر جاب: یک ایمیل → متن ساده‌شده ≈ ۱٬۵۰۰–۲٬۵۰۰ توکن ورودی (با system prompt).
-- امتیازدهی جدا: ≈ ۱٬۵۰۰ ورودی + ۳۰۰ خروجی.
-- پروپوزال فقط برای APPLY/MAYBE (≈ ۳۰٪ جاب‌ها): ≈ ۲٬۵۰۰ ورودی + ۴۰۰ خروجی.
-- Retry ≈ ۱۰٪.
+**Assumptions (explicit):**
+- Per job: one email → simplified text ≈ 1,500–2,500 input tokens (including the system prompt).
+- Separate scoring: ≈ 1,500 input + 300 output.
+- Proposal only for APPLY/MAYBE (≈ 30% of jobs): ≈ 2,500 input + 400 output.
+- Retry ≈ 10%.
 
-| حجم ایمیل/روز | تماس/روز (≈) | توکن ورودی/روز (≈) | توکن خروجی/روز (≈) | سازگاری با Free tier |
+| Emails/day | Calls/day (≈) | Input tokens/day (≈) | Output tokens/day (≈) | Free-tier fit |
 |---|---|---|---|---|
-| **۲۰** | ~۵۰ | ~۱۰۰K | ~۱۵K | ✅ همه‌ی گزینه‌های اصلی کافی‌اند |
-| **۱۰۰** | ~۲۵۰ | ~۵۰۰K | ~۸۰K | ✅ Gemini (اگر اعداد تأیید شوند)؛ ⚠️ Groq 120b: **TPD ۲۰۰K** ناکافی؛ ⚠️ OpenRouter: فقط با $۱۰ شارژ |
-| **۲۰۰** | ~۵۰۰ | ~۹۵۰K | ~۱۶۵K | ⚠️ Gemini: RPD کافی اما بهتر است Flash-Lite برای extraction؛ ❌ Groq 120b؛ ⚠️ Cerebras (اگر ۱M/روز تأیید شود، مرز) |
+| **20** | ~50 | ~100K | ~15K | ✅ All main options are sufficient |
+| **100** | ~250 | ~500K | ~80K | ✅ Gemini (if the numbers are confirmed); ⚠️ Groq 120b: **TPD 200K** is insufficient; ⚠️ OpenRouter: only after a $10 credit |
+| **200** | ~500 | ~950K | ~165K | ⚠️ Gemini: RPD is sufficient but Flash-Lite is better for extraction; ❌ Groq 120b; ⚠️ Cerebras (borderline if 1M/day is confirmed) |
 
-**نتیجه‌ی محاسبه:** برای ۲۰ تا ۵۰ جاب در روز، Free tier کافی است. برای ۲۰۰ جاب، **محدودیت اصلی TPD/TPM است نه RPD**؛ راه‌حل‌ها:
-1. **کوچک‌سازی ورودی:** HTML را به متن تمیز تبدیل کنید، فوتر و لینک‌های tracking را حذف کنید (هدف ≤ ۸۰۰ توکن ورودی برای extraction).
-2. **Prompt caching:** در Groq، «Cached tokens do not count towards your rate limits» (رسمی). system prompt ثابت را کش کنید.
-3. **مدل کوچک برای extraction:** Gemini Flash-Lite یا مدل ۸B؛ مدل بزرگ فقط برای پروپوزال.
-4. **Queue + backoff:** ایمیل‌ها با سرعت کنترل‌شده پردازش شوند؛ عجله‌ای نیست.
+**Calculation result:** for 20 to 50 jobs per day, the free tier is sufficient. For 200 jobs, **the main limit is TPD/TPM, not RPD**; solutions:
+1. **Shrink the input:** convert HTML to clean text, remove footers and tracking links (target ≤ 800 input tokens for extraction).
+2. **Prompt caching:** on Groq, "Cached tokens do not count towards your rate limits" (official). Cache the constant system prompt.
+3. **Small model for extraction:** Gemini Flash-Lite or an 8B model; the large model only for proposals.
+4. **Queue + backoff:** process emails at a controlled rate; there is no rush.
 
 ---
 
-## ۴. پیشنهاد نهایی + Fallback chain
+## 4. Final recommendation + fallback chain
 
-### انتخاب اصلی (فرض: کاربر در کشور مجاز و با حساب قانونی)
-| وظیفه | مدل اصلی | Fallback ۱ | Fallback ۲ (ضروری برای پایداری) |
+### Primary choice (assuming the user is in an allowed country with a legal account)
+| Task | Primary model | Fallback 1 | Fallback 2 (essential for stability) |
 |---|---|---|---|
-| Extraction (JSON) | Gemini Flash-Lite / 2.5 Flash | Groq gpt-oss-20b (۲۰۰K TPD) | Ollama محلی (Qwen2.5 ۷B/۱۴B) |
-| Scoring (Explanation + subscores) | Gemini 3 Flash | Groq gpt-oss-20b | Ollama |
-| Proposal (English writing) | Gemini 3 Flash | Groq gpt-oss-120b (با TPD کم؛ فقط برای پروپوزال) | OpenRouter `:free` (بعد از $10) یا Ollama ۱۴B |
+| Extraction (JSON) | Gemini Flash-Lite / 2.5 Flash | Groq gpt-oss-20b (200K TPD) | Local Ollama (Qwen2.5 7B/14B) |
+| Scoring (explanation + subscores) | Gemini 3 Flash | Groq gpt-oss-20b | Ollama |
+| Proposal (English writing) | Gemini 3 Flash | Groq gpt-oss-120b (low TPD; proposals only) | OpenRouter `:free` (after $10) or Ollama 14B |
 
-### منطق Fallback
+### Fallback logic
 ```text
 call(provider_chain, prompt):
   for p in chain:
@@ -85,47 +85,47 @@ call(provider_chain, prompt):
     try:
       return p.call(prompt, timeout=45s)
     except RateLimit429 as e:
-        p.mark_cooldown(e.retry_after or 60s)   # احترام به Retry-After
+        p.mark_cooldown(e.retry_after or 60s)   # respect Retry-After
     except Timeout/5xx:
         retry(2, backoff=exp+jitter); continue
     except SchemaInvalid:
         retry_once_with_fix_prompt(); continue
-  enqueue_for_later(job)   # بعد از ریست سهمیه (UTC/PT) دوباره تلاش
+  enqueue_for_later(job)   # retry after the quota resets (UTC/PT)
   notify_admin("all providers failed", job_id)
 ```
 
-**قواعد:**
-- همه‌ی خروجی‌ها JSON با Pydantic اعتبارسنجی شوند؛ خطای schema = retry یک‌بار.
-- هر تماس در جدول `llm_calls` ثبت شود (provider، model، tokens، latency، error).
-- کلید API در `.env` با دسترسی فایل 600؛ هرگز در Git یا لاگ.
-- ارسال داده به Free tier: **فقط ایمیل‌های Upwork (بدون اطلاعات شخصی دیگر)**. با توجه به شرایط Unpaid Gemini، اطلاعات حساس (آدرس/شماره/اطلاعات بانکی/متن ایمیل‌های غیرمرتبط) هرگز ارسال نشود.
+**Rules:**
+- Validate every output as JSON; a schema error = retry once.
+- Log every call in an `llm_calls` table (provider, model, tokens, latency, error).
+- API keys in `.env` with file permission 600; never in Git or logs.
+- Sending data to a free tier: **only Upwork emails (no other personal information)**. Given the Unpaid Gemini terms, never send sensitive information (address/phone/bank details/unrelated email text).
 
-### اگر Free tier کافی نبود
-- **Gemini paid** (Flash-Lite): منابع ثالث هزینه‌ی ورودی ≈ $۰.۱۰ به ازای یک میلیون توکن گزارش می‌کنند؛ برای ۲۰۰ جاب/روز، هزینه‌ی ماهانه احتمالاً **چند دلار** است (تقریب؛ قیمت رسمی قبل از خرید چک شود). **توجه:** امکان پرداخت با کارت بین‌المللی به کشور و بانک شما بستگی دارد؛ قبل از خرید تست کنید.
-- **Local-first:** یک سرور/کامپیوتر خانگی با ۱۶–۲۴ GB RAM و Ollama؛ کمترین هزینه‌ی ماهانه، کندتر، کیفیت انگلیسی پایین‌تر از مدل‌های بزرگ (استنتاج).
+### If the free tier is not enough
+- **Gemini paid** (Flash-Lite): third-party sources report an input cost of about $0.10 per million tokens; for 200 jobs/day the monthly cost is probably **a few dollars** (approximation; check official pricing before buying). **Note:** paying with an international card depends on your country and bank; test before buying.
+- **Local-first:** a server/home computer with 16–24 GB RAM and Ollama; lowest monthly cost, slower, English quality below large models (inference).
 
 ---
 
-## ۵. سخت‌افزار برای مدل‌های محلی (استنتاج، تست لازم)
+## 5. Hardware for local models (inference, needs testing)
 
-| مدل تقریبی | RAM/VRAM (Q4) | کیفیت extraction | کیفیت English writing |
+| Approximate model | RAM/VRAM (Q4) | Extraction quality | English writing quality |
 |---|---|---|---|
-| ۷–۸B | ~۶–۸ GB | خوب برای فیلدهای ساده | متوسط؛ نیاز به بازبینی بیشتر |
-| ۱۴B | ~۱۲–۱۶ GB | خوب | خوب |
-| ۳۰B+ | ~۲۰–۲۴ GB+ | عالی | عالی؛ سرور قوی‌تر لازم |
+| 7–8B | ~6–8 GB | Good for simple fields | Average; needs more review |
+| 14B | ~12–16 GB | Good | Good |
+| 30B+ | ~20–24 GB+ | Excellent | Excellent; needs a stronger server |
 
-CPU-only برای ۱۴B کند است، اما برای صف غیربلادرنگ (۲۰–۲۰۰ جاب/روز) قابل‌قبول است.
+CPU-only is slow for 14B, but acceptable for a non-real-time queue (20–200 jobs/day).
 
 ---
 
-## ۶. تناقض‌ها و «تأیید نشد» (خلاصه)
+## 6. Conflicts and "unconfirmed" (summary)
 
-| موضوع | وضعیت |
+| Topic | Status |
 |---|---|
-| Gemini free RPD/RPM برای هر مدل | تناقض بین منابع ثالث؛ **رسمی در این جلسه خوانده نشد** |
-| Gemini Pro در Free tier | تناقض (حذف در آوریل ۲۰۲۶ یا ۵۰ RPD) |
-| Groq فهرست مدل‌های رایگان | تناقض؛ صفحه‌ی رسمی Developer base limits خوانده شد |
-| Cerebras | تناقض شدید (۳۰ RPM/1M توکن در برابر ۵ RPM/۳۰K TPM) |
-| Mistral | محدودیت منتشرنشده؛ اعداد گزارش‌های کاربری |
-| شرایط منطقه‌ای Groq/OpenRouter/Cerebras/Mistral/Cloudflare برای کشور کاربر | **تأیید نشد**؛ قبل از ثبت‌نام بررسی شود |
-| پرداخت با کارت بین‌المللی برای کاربر | تأیید نشد؛ کاربر با بانک/کارت خود تست کند |
+| Gemini free RPD/RPM per model | Conflict between third-party sources; **official not read in this session** |
+| Gemini Pro on the free tier | Conflict (removed in April 2026 or 50 RPD) |
+| Groq free model list | Conflict; the official Developer base limits page was read |
+| Cerebras | Strong conflict (30 RPM/1M tokens vs 5 RPM/30K TPM) |
+| Mistral | Limits unpublished; numbers from user reports |
+| Regional terms of Groq/OpenRouter/Cerebras/Mistral/Cloudflare for the user's country | **Unconfirmed**; check before registering |
+| International card payment for the user | Unconfirmed; test with your own bank/card |

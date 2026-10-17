@@ -12,7 +12,7 @@ const goodLlm = validateScore({
   scope_clarity: 80,
   question_fit: 80,
   red_flags: [],
-  summary_fa: 'خوب است.',
+  summary_en: 'Strong fit.',
   missing_info: [],
 });
 
@@ -97,13 +97,13 @@ test('unknown payment (null) does not fail G4', () => {
 });
 
 test('weak fit gives MAYBE or SKIP, never APPLY', () => {
-  const llm = validateScore({ skill_match: 45, scope_clarity: 40, question_fit: 40, red_flags: [], summary_fa: '', missing_info: [] });
+  const llm = validateScore({ skill_match: 45, scope_clarity: 40, question_fit: 40, red_flags: [], summary_en: '', missing_info: [] });
   const ev = evaluateJob({ job: baseJob, llm, rates, prefs, now: NOW });
   assert.notEqual(ev.verdict, 'APPLY');
 });
 
 test('scores are clamped to 0..100', () => {
-  const llm = validateScore({ skill_match: 500, scope_clarity: -5, question_fit: 100, red_flags: [], summary_fa: '', missing_info: [] });
+  const llm = validateScore({ skill_match: 500, scope_clarity: -5, question_fit: 100, red_flags: [], summary_en: '', missing_info: [] });
   const ev = evaluateJob({ job: baseJob, llm, rates, prefs, now: NOW });
   assert.ok(ev.score >= 0 && ev.score <= 100);
   assert.equal(ev.subscores.skill_match, 100);

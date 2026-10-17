@@ -1,5 +1,5 @@
-// Gmail REST API با fetch (بدون npm). fetch به‌صورت پارامتر تزریق می‌شود تا قابل تست باشد.
-// Scope: gmail.modify (خواندن + تغییر برچسب؛ ارسال ایمیل نداریم).
+// Gmail REST API via fetch (no npm). fetch is injected as a parameter so the module is testable.
+// Scope: gmail.modify (read + change labels; we never send email).
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -12,7 +12,7 @@ async function failIfNotOk(res, what) {
   } catch {
     /* ignore */
   }
-  throw new Error(`${what} ناموفق (HTTP ${res.status})${detail ? `: ${detail}` : ''}`);
+  throw new Error(`${what} failed (HTTP ${res.status})${detail ? `: ${detail}` : ''}`);
 }
 
 export async function getAccessToken(fetch, { clientId, clientSecret, refreshToken }) {
@@ -27,9 +27,9 @@ export async function getAccessToken(fetch, { clientId, clientSecret, refreshTok
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body,
   });
-  await failIfNotOk(res, 'تازه‌سازی توکن Gmail');
+  await failIfNotOk(res, 'Gmail token refresh');
   const json = await res.json();
-  if (!json.access_token) throw new Error('توکن Gmail در پاسخ نبود');
+  if (!json.access_token) throw new Error('No Gmail access token in the response');
   return json.access_token;
 }
 
@@ -39,7 +39,7 @@ export async function listUnreadIds(fetch, token, query, max) {
   const res = await fetch(`${API}/messages?${params.toString()}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  await failIfNotOk(res, 'خواندن لیست ایمیل‌ها');
+  await failIfNotOk(res, 'List emails');
   const json = await res.json();
   const ids = (json.messages || []).map((m) => m.id).slice(0, max);
   return { ids, more: Boolean(json.nextPageToken) };
@@ -80,7 +80,7 @@ export async function getMessage(fetch, token, id) {
   const res = await fetch(`${API}/messages/${encodeURIComponent(id)}?format=full`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  await failIfNotOk(res, 'خواندن ایمیل');
+  await failIfNotOk(res, 'Read email');
   const json = await res.json();
   const { body, isHtml } = extractBody(json.payload);
   return {
@@ -99,5 +99,5 @@ export async function markRead(fetch, token, id) {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ removeLabelIds: ['UNREAD'] }),
   });
-  await failIfNotOk(res, 'حذف برچسب UNREAD');
+  await failIfNotOk(res, 'Remove UNREAD label');
 }

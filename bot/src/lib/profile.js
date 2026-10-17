@@ -1,36 +1,36 @@
-// پروفایل شما: تنها منبع حقایق برای امتیازدهی و پروپوزال.
-// ⚠️ همه‌ی [TODO] را با اطلاعات واقعی خودتان پر کنید؛ تا زمانی که [TODO] باقی است، /check اجرا نمی‌شود.
-// فقط چیزی را بنویسید که واقعاً درست است؛ ایجنت ادعای جدید اختراع نمی‌کند.
+// Your profile: the only source of truth for scoring and proposals.
+// ⚠️ Replace every [TODO] with true information about yourself; while a [TODO] remains, the run refuses to start.
+// Only write things that are actually true; the agent never invents new claims.
 
 export const PROFILE = {
   identity: {
-    headline: '[TODO: مثلاً Frontend Engineer — React / Next.js]',
-    years_experience: '[TODO: عدد]',
-    english_level: '[TODO: مثلاً C1]',
+    headline: '[TODO: e.g. Frontend Engineer — React / Next.js]',
+    years_experience: '[TODO: number]',
+    english_level: '[TODO: e.g. C1]',
   },
-  core_skills: ['[TODO: مهارت اصلی ۱]', '[TODO: مهارت اصلی ۲]'],
+  core_skills: ['[TODO: core skill 1]', '[TODO: core skill 2]'],
   secondary_skills: [],
-  // حداقل نرخ شما (USD). در Hard gate G1 استفاده می‌شود.
+  // Your minimum rates (USD). Used by hard gate G1.
   rates: {
     hourly_min_usd: 30,
     fixed_min_usd: 300,
   },
   preferences: {
-    blocked_client_countries: [],        // مثلاً ['Country X']
-    excluded_keywords: ['data entry'],   // اگر در عنوان/خلاصه‌ی جاب بود، رد می‌شود (G3)
+    blocked_client_countries: [],        // e.g. ['Country X']
+    excluded_keywords: ['data entry'],   // If present in the title/summary, the job is rejected (G3).
   },
-  // فقط نتایج قابل اثبات که خودتان تأیید کرده‌اید
+  // Only verifiable results that you have confirmed yourself
   proof_points: [
-    { id: 'pp1', text: '[TODO: نتیجه‌ی عددی یا توصیف واقعی]', evidence_url: '[TODO: لینک عمومی یا خالی]' },
+    { id: 'pp1', text: '[TODO: a numeric result or a true description]', evidence_url: '[TODO: public link or leave empty]' },
   ],
   portfolio: [],
   tone: 'direct, friendly, professional',
-  // ۲ پروپوزال موفق خودتان (فقط سبک را الگو می‌گیرد؛ فکت‌ها کپی نمی‌شوند)
+  // Two of your successful proposals (style reference only; facts are never copied)
   examples: [],
 };
 
 export function assertProfileReady(profile = PROFILE) {
   if (JSON.stringify(profile).includes('[TODO')) {
-    throw new Error('فایل lib/profile.js هنوز کامل نشده است؛ همه‌ی [TODO] را پر کنید');
+    throw new Error('lib/profile.js is not complete yet; fill in every [TODO]');
   }
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// اجرای یک‌باره روی سیستم خودتان (نه روی Telegram Serverless) برای گرفتن Refresh Token Gmail.
+// Run once on your own machine to obtain a Gmail Refresh Token.
 //
 //   GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/get-refresh-token.mjs
 //
-// مرورگر باز می‌شود؛ با حساب Gmail اختصاصی Upwork وارد شوید و دسترسی بدهید.
-// Refresh Token در ترمینال چاپ می‌شود؛ آن را فقط با setSecret ذخیره کنید و جای امن نگه دارید.
+// A browser opens; sign in with the dedicated Upwork Gmail account and grant access.
+// The Refresh Token is printed in the terminal; store it only with put-secret.mjs and keep it private.
 
 import http from 'node:http';
 import { exec } from 'node:child_process';
@@ -16,7 +16,7 @@ const REDIRECT = `http://127.0.0.1:${PORT}/callback`;
 const SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
-  console.error('GMAIL_CLIENT_ID و GMAIL_CLIENT_SECRET لازم است.');
+  console.error('GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET are required.');
   process.exit(1);
 }
 
@@ -40,7 +40,7 @@ const server = http.createServer(async (req, res) => {
   const code = url.searchParams.get('code');
   const error = url.searchParams.get('error');
   if (error || !code) {
-    res.writeHead(400).end(`خطا: ${error || 'code نیست'}`);
+    res.writeHead(400).end(`Error: ${error || 'no code'}`);
     console.error('OAuth error:', error || 'no code');
     server.close();
     process.exit(1);
@@ -59,16 +59,16 @@ const server = http.createServer(async (req, res) => {
     });
     const json = await tokenRes.json();
     if (!json.refresh_token) {
-      res.writeHead(500).end('refresh_token دریافت نشد. دوباره با prompt=consent امتحان کنید.');
+      res.writeHead(500).end('No refresh_token received. Retry with prompt=consent.');
       console.error('No refresh_token in response. Keys:', Object.keys(json));
       server.close();
       process.exit(1);
     }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(
-      '<h3>انجام شد. این پنجره را ببندید و به ترمینال برگردید.</h3>'
+      '<h3>Done. Close this window and return to the terminal.</h3>'
     );
-    console.log('\nREFRESH TOKEN (فقط یک‌بار نمایش داده می‌شود):\n' + json.refresh_token + '\n');
-    console.log('حالا با setSecret آن را به نام GMAIL_REFRESH_TOKEN ذخیره کنید.');
+    console.log('\nREFRESH TOKEN (shown only once):\n' + json.refresh_token + '\n');
+    console.log('Now store it as GMAIL_REFRESH_TOKEN with put-secret.mjs.');
   } finally {
     server.close();
     setTimeout(() => process.exit(0), 200);
@@ -76,7 +76,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log('لینک ورود را باز کنید:\n' + authUrl + '\n');
+  console.log('Open this sign-in link:\n' + authUrl + '\n');
   const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start ""' : 'xdg-open';
   exec(`${opener} "${authUrl}"`, () => {});
 });

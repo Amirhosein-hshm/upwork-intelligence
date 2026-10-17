@@ -1,4 +1,4 @@
-// اعتبارسنجی دستی خروجی LLM (بدون کتابخانه). اگر ساختار نادرست باشد خطا می‌دهد.
+// Validation of LLM output, written by hand (no library). Throws when the structure is wrong.
 
 export const EMAIL_TYPES = ['job_alert', 'invitation', 'message', 'offer', 'contract', 'other', 'not_a_job'];
 export const RED_FLAG_CODES = [
@@ -13,7 +13,7 @@ export const RED_FLAG_CODES = [
   'unusual_payment_request',
 ];
 
-// خطای ساختار/محتوای ایمیل: دائمی است، یعنی تلاش مجدد فایده ندارد
+// A structural/content error in the email: permanent, so retrying is pointless.
 export class ValidationError extends Error {
   constructor(message) {
     super(message);
@@ -40,13 +40,13 @@ const clampScore = (x) => {
 };
 
 export function validateExtraction(d) {
-  if (!isObj(d)) throw new ValidationError('extract: خروجی JSON نیست');
-  if (!EMAIL_TYPES.includes(d.email_type)) throw new ValidationError('extract: email_type نامعتبر');
+  if (!isObj(d)) throw new ValidationError('extract: output is not JSON');
+  if (!EMAIL_TYPES.includes(d.email_type)) throw new ValidationError('extract: invalid email_type');
   if (d.job == null) return { email_type: d.email_type, job: null };
   const j = d.job;
-  if (!isObj(j)) throw new ValidationError('extract: job نامعتبر');
+  if (!isObj(j)) throw new ValidationError('extract: invalid job');
   const title = str(j.title, 200);
-  if (!title || title.length < 3) throw new ValidationError('extract: عنوان جاب نیست');
+  if (!title || title.length < 3) throw new ValidationError('extract: missing job title');
   const url = str(j.url, 500);
   const budget = isObj(j.budget)
     ? {
@@ -87,7 +87,7 @@ export function validateExtraction(d) {
 }
 
 export function validateScore(d) {
-  if (!isObj(d)) throw new ValidationError('score: خروجی JSON نیست');
+  if (!isObj(d)) throw new ValidationError('score: output is not JSON');
   const redFlags = (Array.isArray(d.red_flags) ? d.red_flags : [])
     .filter((f) => isObj(f) && RED_FLAG_CODES.includes(f.code))
     .map((f) => ({
@@ -100,15 +100,15 @@ export function validateScore(d) {
     scope_clarity: clampScore(d.scope_clarity),
     question_fit: clampScore(d.question_fit),
     red_flags: redFlags,
-    summary_fa: str(d.summary_fa, 600) || '',
+    summary_en: str(d.summary_en, 600) || '',
     missing_info: strArr(d.missing_info, 3),
   };
 }
 
 export function validateProposal(d) {
-  if (!isObj(d)) throw new ValidationError('proposal: خروجی JSON نیست');
+  if (!isObj(d)) throw new ValidationError('proposal: output is not JSON');
   const text = str(d.proposal_text, 4000);
-  if (!text) throw new ValidationError('proposal: متن پروپوزال خالی است');
+  if (!text) throw new ValidationError('proposal: proposal text is empty');
   return {
     proposal_text: text,
     word_count: text.split(/\s+/).filter(Boolean).length,

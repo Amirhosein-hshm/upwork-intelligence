@@ -1,4 +1,4 @@
-// Hard gates (G1–G7) و امتیاز وزنی از research/03-job-scoring-rubric.md. این ماژول خالص است (بدون LLM و بدون I/O).
+// Hard gates (G1–G7) and weighted score from research/03-job-scoring-rubric.md. This module is pure (no LLM, no I/O).
 
 export const WEIGHTS = {
   skill_match: 30,
@@ -34,7 +34,7 @@ export function budgetValueOf(job) {
 }
 
 function budgetFit(value, threshold, isUsd) {
-  if (value === null || !isUsd || !threshold) return 50; // نامشخص: خنثی
+  if (value === null || !isUsd || !threshold) return 50; // Unknown: neutral
   const r = value / threshold;
   if (r >= 2) return 100;
   if (r >= 1) return 85;
@@ -76,15 +76,15 @@ function timing(job, now) {
 
 function logistics(job) {
   let s = 50;
-  if (job.duration) s += 25; // اطلاعات زمان‌بندی موجود است
+  if (job.duration) s += 25; // Timeline information is available
   if (job.workload) s += 25;
   return s;
 }
 
 /**
  * @param {object} args
- * @param {object} args.job        خروجی validateExtraction().job
- * @param {object} args.llm        خروجی validateScore()
+ * @param {object} args.job        Output of validateExtraction().job
+ * @param {object} args.llm        Output of validateScore()
  * @param {object} args.rates      { hourly_min_usd, fixed_min_usd }
  * @param {object} args.prefs      { blocked_client_countries, excluded_keywords }
  */
@@ -95,33 +95,33 @@ export function evaluateJob({ job, llm, rates, prefs, now = Date.now() }) {
   const isHourly = job.job_type === 'hourly' || job.budget?.unit === 'hour';
   const threshold = isHourly ? rates.hourly_min_usd : rates.fixed_min_usd;
 
-  // G1: بودجه/نرخ زیر حداقل
+  // G1: Budget/rate below the minimum
   if (isUsd && value !== null && value < threshold) failed.push('G1');
 
-  // G2: کشور کارفرمای ممنوع
+  // G2: Blocked client country
   const country = job.client?.country;
   if (country && prefs.blocked_client_countries.some((c) => c.toLowerCase() === country.toLowerCase())) {
     failed.push('G2');
   }
 
-  // G3: کلیدواژه‌ی حذف‌شده
+  // G3: Excluded keyword
   const haystack = `${job.title} ${job.description_summary} ${job.skills.join(' ')}`.toLowerCase();
   if (prefs.excluded_keywords.some((k) => haystack.includes(k.toLowerCase()))) failed.push('G3');
 
-  // G4: پرداخت تأییدنشده با بودجه‌ی کم
+  // G4: Unverified payment with a low budget
   if (job.client?.payment_verified === false && value !== null && value < 500) failed.push('G4');
 
-  // G5: مهارت اصلی خارج از پروفایل
+  // G5: Core skill outside the profile
   if (llm.skill_match < 30) failed.push('G5');
 
-  // پرچم‌های با اطمینان پایین فقط هشدارند
+  // Low-confidence flags are warnings only
   const accepted = [];
   const warnings = [];
   for (const f of llm.red_flags) {
     if (f.confidence === 'low') warnings.push(f);
     else accepted.push(f);
   }
-  // G6: خروج از Upwork، G7: درخواست کار رایگان
+  // G6: Off-platform contact, G7: Request for free work
   if (accepted.some((f) => f.code === 'off_platform_contact')) failed.push('G6');
   if (accepted.some((f) => f.code === 'ask_for_free_work')) failed.push('G7');
 
